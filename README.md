@@ -8,7 +8,9 @@ This project is a collaborative effort between two students, **Marlon Helbing** 
 
 
 ## Tools
-- **R**: The **programming language** used for this project is **R**, which we used during lessons. The project aims to evaluate what we have learned from the Statistical Learning course. For this reason, in our project work, we were allowed to use only methods and models presented in the course so we were not allowed to use *Tidyverse* R-packages such as *ggplot* or *ggplot2* as well as any data analysis method that has not been presented during the classes.
+- **R**: The programming language used for this project is *R*, which we used during lessons. The project aims to evaluate what we have learned from the Statistical Learning course. For this reason, in our project work, we were allowed to use only methods and models presented in the course so we were not allowed to use *Tidyverse* R-packages such as *ggplot* or *ggplot2* as well as any data analysis method that has not been presented during the classes.
+- **LaTeX**: We used *LaTeX* as typesetting software for the report because it is widely used in academia and provides a professional look to our report, which is important as this is an academic project.
+- **PowerPoint**: We used *PowerPoint* for the presentation because it’s also widely used in academic and professional settings, making it a safe choice for our project presentation.
 
 
 ## Dataset
