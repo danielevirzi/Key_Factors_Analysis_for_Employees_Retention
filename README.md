@@ -12,7 +12,7 @@ This project is a collaborative effort between two students, **Marlon Helbing** 
 
 
 ## Dataset
-- [**Most Streamed Spotify Songs 2023**]((https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023)): This dataset, sourced from Kaggle, is a comprehensive collection of the most streamed songs of 2023 as listed on Spotify. It was chosen for our project due to our shared love for music and our domain knowledge in this area. It provides insights into each song’s attributes, popularity, and presence on various music platforms. This makes it an excellent resource for our project, as it allows us to explore a wide range of factors that could potentially influence a song’s popularity.
+- [**Most Streamed Spotify Songs 2023**](https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023): This dataset, sourced from Kaggle, is a comprehensive collection of the most streamed songs of 2023 as listed on Spotify. It was chosen for our project due to our shared love for music and our domain knowledge in this area. It provides insights into each song’s attributes, popularity, and presence on various music platforms. This makes it an excellent resource for our project, as it allows us to explore a wide range of factors that could potentially influence a song’s popularity.
 
   
 ## Project Goals
