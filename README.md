@@ -12,20 +12,21 @@ This project is a collaborative effort between two students, **Marlon Helbing** 
 
 
 ## Dataset
-- **Most Streamed Spotify Songs 2023**: This dataset, sourced from Kaggle, is a comprehensive collection of the most streamed songs of 2023 as listed on Spotify. It was chosen for our project due to our shared love for music and our domain knowledge in this area. It provides insights into each song’s attributes, popularity, and presence on various music platforms. This makes it an excellent resource for our project, as it allows us to explore a wide range of factors that could potentially influence a song’s popularity.
+- [**Most Streamed Spotify Songs 2023**]((https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023)): This dataset, sourced from Kaggle, is a comprehensive collection of the most streamed songs of 2023 as listed on Spotify. It was chosen for our project due to our shared love for music and our domain knowledge in this area. It provides insights into each song’s attributes, popularity, and presence on various music platforms. This makes it an excellent resource for our project, as it allows us to explore a wide range of factors that could potentially influence a song’s popularity.
 
+  
 ## Project Goals
 The main objectives of this project are:
-1. **Exploratory Data Analysis (EDA)**: on the dataset of the most streamed Spotify songs in 2023. We aim to uncover patterns and trends in the data that could provide insights into what makes a song popular on Spotify.
+1. **Exploratory Data Analysis (EDA)**: We aim to uncover patterns and trends in the data that could provide insights into what makes a song popular on Spotify.
 2. **Regression Model**: This model aims to predict a song's popularity, in terms of streams, based on various features present in the dataset.
 
 
 ## Project Structure
 - **README.md**: This file contains project information and setup instructions.
-- **data/**: Directory containing the dataset of the most streamed Spotify songs in 2023.
-- **src/**: Directory containing the R scripts for the EDA and regression model.
-- **report/**: Directory containing the final report and any associated graphics generated during the project.
-- **presentation/**: Directory containing the slides for the oral presentation in front of the class.
+- **data**: Directory containing the dataset, *Most Streamed Spotify Songs 2023*.
+- **code**: Directory containing the R scripts for the EDA and Regression Model.
+- **report**: Directory containing the final report and any associated graphics generated during the project.
+- **presentation**: Directory containing the slides for the oral presentation in front of the class.
 
 
 Enjoy exploring the project!
