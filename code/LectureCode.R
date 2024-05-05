@@ -1,9 +1,10 @@
 # THE ADVERTISING DATASET
 
-setwd('/Users/marlon/Desktop/data')
+setwd('/Users/marlon/Desktop/R_project/data')
 
 Advertising <- read.csv("Advertising.csv")
 attach(Advertising)
+#detach(Advertising)
 
 plot(TV, sales, pch=20)
 
