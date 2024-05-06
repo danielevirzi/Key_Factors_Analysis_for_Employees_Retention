@@ -525,3 +525,5 @@ pairs(Auto[,-c(1, 8, 9)])
 red.mod <- update(full.mod, ~.-weight)
 summary(red.mod)
 
+
+
