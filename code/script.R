@@ -1,15 +1,21 @@
 # Setting the correct working directory (Location where our data & R files are stored)
 
-setwd('/Users/marlon/Desktop/R_project/data')
+rm(list=ls())
 
-
-Spotify <- read.csv("spotify-2023.csv")
+setwd('/Users/marlon/Desktop/R_project')
+Spotify <- read.csv("data/spotify-2023.csv")
 
 #attach(Spotify) # s.t. we can use the column names directly
 
 #detach(Spotify) # In case we want to load data new, always detach first
 
 #plot(in_apple_charts, streams, pch=20) # pch --> chooses the point shape
+
+
+######################################### STEP 1 QUESTIONS WE WANT TO ANSWER #########################################
+
+# 1. Which artists are the most famous ones ?
+
 
 ######################################### STEP 2 DATA CLEANING & FILTERING #########################################
 
@@ -51,8 +57,13 @@ Spotify$mode <- as.factor(Spotify$mode)
 
 
 ### SOME MORE (columns that were in the wrong type for some reason) ###
+Spotify$streams <- as.integer(Spotify$streams)
 Spotify$in_deezer_playlists <- as.integer(Spotify$in_deezer_playlists)
 Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
+
+
+# Drop NA's again
+Spotify <- na.omit(Spotify)
 
 
 ##### CHANGING STRUCTURES TO OUR LIKING #####
@@ -76,10 +87,62 @@ split_df <- do.call(rbind, split_col)
 # Merge into our original dataframe
 Spotify_with_splitted_artists <- cbind(Spotify, split_df)
 # Write to .csv (for checking if we did it correctly)
-write.csv(Spotify_with_splitted_artists, '/Users/marlon/Desktop/R_project/data/spotify-2023-splitted-artists.csv', row.names = FALSE)
+write.csv(Spotify_with_splitted_artists, 'data/spotify-2023-splitted-artists.csv', row.names = FALSE)
 
 
 ##### GROUPING ARTISTS FOR NOVEL INFORMATION #####
+
+
+### RANKING MAIN ARTISTS BY STREAMS ###
+## FOR QUESSTION 1 ##
+# First we will do a ranking of all the main artists, i.e. not the features
+# and group their streams to do a ranking of how popular they are (in terms of 
+# streams)
+
+
+
+# Get all the main artists
+
+
+
+# Create an empty list to store the stream sums
+streams_per_main_artist <- list()
+energy_per_main_artist <- list()
+
+group_by_artists <- split(Spotify_with_splitted_artists, Spotify_with_splitted_artists$"1")
+
+for(i in 1:length(group_by_artists)) {
+  # Calculate the sum for streams
+  sum_value <- sum(group_by_artists[[i]]$streams, na.rm = TRUE)
+  # Calculate the mean for specific elements in the song
+  # e.g. energy
+  mean_value <- mean(group_by_artists[[i]]$energy_., na.rm = TRUE)
+  
+  streams_per_main_artist[[i]] <- data.frame(group_column = names(group_by_artists)[i], sum = sum_value)
+  energy_per_main_artist[[i]] <- data.frame(group_column = names(group_by_artists)[i], mean = mean_value)
+}
+
+# Combine all the dataframes 
+
+grouped_main_artists_and_streams <- do.call(rbind, streams_per_main_artist)
+grouped_main_artists_and_energy <- do.call(rbind, energy_per_main_artist)
+
+grouped_main_artists <- merge(grouped_main_artists_and_streams, grouped_main_artists_and_energy, by = 'group_column')
+
+
+
+
+# Order by the streams
+# This dataframe gives us the ranking of main artists !
+grouped_main_artists <- grouped_main_artists[order(grouped_main_artists$sum, decreasing = TRUE), ]
+
+# Rename columns
+colnames(grouped_main_artists) <- c("Artist", "Streams", 'Energy')
+
+# Select the top 10 artists
+top_10 <- grouped_main_artists[1:10, ]
+
+barplot(top_10$Streams, names.arg = top_10$Artist, xlab='Artists', ylab='Streams')
 
 
 
