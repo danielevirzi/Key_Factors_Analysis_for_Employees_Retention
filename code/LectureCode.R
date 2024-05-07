@@ -28,7 +28,7 @@ cov(sales, TV)
 
 # scatterplot when the two variables are centered
 
-plot((TV-mean(TV)), (sales-mean(sales)), pch=20)
+plot((TV-mean(TV)), (sales-mean(sales)), pch=5)
 abline(h=0, v=0, lwd=2)
 
 
