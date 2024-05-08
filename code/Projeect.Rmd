@@ -1,1 +1,178 @@
-Project X
+---
+title: "Statistical Learning Project"
+author: "Marlon Helbing, Daniele Virzì"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This project is a collaborative effort between two students, **Marlon Helbing** and **Daniele Virzì**. It is an academic project that will be graded based on the quality and depth of our analysis. The project aims to apply the concepts and techniques learned in the **Statistical Learning Course** to a real-world dataset.
+
+## Project goals
+
+The main objectives of this project are:
+
+1.  **Exploratory Data Analysis (EDA)**: We aim to uncover patterns and trends in the data that could provide insights into what makes a song popular on ***Spotify***.
+
+2.  **Regression Model**: This model aims to predict a song's popularity, in terms of streams, based on various features present in the dataset.
+
+## Dataset
+
+In this project, we have analyzed the dataset [*Most Streamed Spotify Songs 2023*](https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023) from ***Kaggle***. This dataset contains a comprehensive list of the most famous songs of 2023 as listed on ***Spotify.***
+
+The dataset contains the following columns:
+
+-   **`track_name`**: *Name of the song*.
+
+-   **`artist(s)_name`**: *Name of the artist(s) of the song*.
+
+-   **`artist_count`**: *Number of artists contributing to the song*.
+
+-   **`released_year`**: *Year when the song was released*.
+
+-   **`released_month`**: *Month when the song was released*.
+
+-   **`released_day`**: *Day of the month when the song was released*.
+
+-   **`in_spotify_playlists`**: *Number of Spotify playlists the song is included in*.
+
+-   **`in_spotify_charts`**: *Presence and rank of the song on Spotify charts*.
+
+-   **`streams`**: *Total number of streams on Spotify*.
+
+-   **`in_apple_playlists`**: *Number of Apple Music playlists the song is included in*.
+
+-   **`in_apple_charts`**: *Presence and rank of the song on Apple Music charts*.
+
+-   **`in_deezer_playlists`**: *Number of Deezer playlists the song is included in*.
+
+-   **`in_deezer_charts`**: *Presence and rank of the song on Deezer charts*.
+
+-   **`in_shazam_charts`**: *Presence and rank of the song on Shazam charts*.
+
+-   **`bpm`**: *Beats per minute, a measure of song tempo*.
+
+-   **`key`**: *Key of the song*.
+
+-   **`mode`**: *Mode of the song (major or minor)*.
+
+-   **`danceability_%`**: *Percentage indicating how suitable the song is for dancing*.
+
+-   **`valence_%`**: *Positivity of the song's musical content*.
+
+-   **`energy_%`**: *Perceived energy level of the song*.
+
+-   **`acousticness_%`**: *Amount of acoustic sound in the song*.
+
+-   **`instrumentalness_%`**: *Amount of instrumental content in the song*.
+
+-   **`liveness_%`**: *Presence of live performance elements*.
+
+-   **`speechiness_%`**: *Amount of spoken words in the song*.
+
+# Data Loading
+
+As previously stated, the purpose of this project is to assess the knowledge we have gained from the **Statistical Learning Course**. Because of this, we were only permitted to utilize the models and techniques covered in the course for our project work; we were not permitted to use any data analysis techniques that were not covered in class or any `Tidyverse` R-packages, like `ggplot` or `ggplot2`.
+
+## Packages required
+
+```{r imports, echo=FALSE}}
+library(corrplot)
+```
+
+## Loading the dataset
+
+```{r data, echo=FALSE}
+Spotify <- read.csv("spotify-2023.csv")
+```
+
+# Data Cleaning
+
+In this section, we had performed some data cleaning tasks to ensure that the dataset is ready for analysis. This includes checking and handling appropriately missing values and duplicates.
+
+## Checking the structure of the data
+
+```{r explore}
+# Check the first 5 rows of the dataset in order to understand the structure of the data
+head(Spotify)
+```
+
+## Handling missing values
+
+```{r missing}
+# Check how many missing values there are in the dataset and where they are
+missing_values <- sum(is.na(Spotify))
+
+# Remove all rows where there is atleast one missing value in some column
+Spotify <- na.omit(Spotify)
+```
+
+## Handling duplicates
+
+```{r duplicates}
+# Check how many duplicates there are in the dataset
+duplicates <- sum(duplicated(Spotify))
+
+# Remove all duplicates from the dataset
+Spotify <- unique(Spotify)
+```
+
+# Data Preprocessing
+
+In order to perform the analysis, we need to preprocess the data. This includes changing the datatype of some columns, removing unnecessary columns, and handling categorical values.
+
+```{r structure}
+# Check the structure of the dataset in order to understand the datatypes
+str(Spotify)
+```
+
+## Date datatype
+
+We had the date of release given in three different columns (day,month,year) as strings and we wanted to change this into one column and save it as datatype date. Typical format for date is '*2022-06-22*'. As a way to achieve this result, we used `paste()`with the parameter `sep = '-'` to aggregate the three columns into a new column , and then we converted the column datatype using `as.Date()` with parameter `format = "%Y-%m-%d"`. We dropped the original three columns since they were no longer relevant.
+
+```{r date}
+# First we create a new column and store the date in the wanted format 
+Spotify$released_date <- paste(Spotify$released_year,
+                               Spotify$released_month,
+                               Spotify$released_day,
+                               sep = '-')
+
+# We give it the wanted datatype of DATE
+Spotify$released_date <- as.Date(Spotify$released_date,
+                                 format = "%Y-%m-%d")
+
+# We can directly drop our other 3 columns storing the dates
+Spotify <- subset(Spotify, select = -c(released_year,
+                                       released_month,
+                                       released_day))
+```
+
+## Categorical datatype
+
+We have noticed that tha columns **`key`** and **`mode`** were *categorical* and we wanted to convert them into *factors* using `as.factor()`*.*
+
+```{r factor}
+# Change columns with categorical values into the right format (i.e. factor)
+Spotify$key <- as.factor(Spotify$key)
+Spotify$mode <- as.factor(Spotify$mode)
+```
+
+Moreover, the columns `in_deezer_playlists`, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *categorical* so we have converted them into *integer* using `as.integer()`.
+
+```{r integer}
+# Change columns with categorical values into the right format (i.e. integer)
+Spotify$in_deezer_playlists <- as.integer(Spotify$in_deezer_playlists)
+Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
+```
+
+# Data Summary
+
+```{r summary}
+# Check the summary of the dataset in order to understand the distribution of the data
+summary(Spotify)
+```
