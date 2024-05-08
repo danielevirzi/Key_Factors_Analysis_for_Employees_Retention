@@ -2,13 +2,16 @@
 # We set it via relative paths such that we can work on the same code without 
 # the need to change it all the time
 
+
+# Clear current working environment
+rm(list=ls())
+
 # Get the directory of the current script
 script_dir <- getwd()
 
 Spotify <- read.csv("./data/spotify-2023.csv")
 
-# Clear current working environment
-rm(list=ls())
+
 
 #attach(Spotify) # s.t. we can use the column names directly
 
