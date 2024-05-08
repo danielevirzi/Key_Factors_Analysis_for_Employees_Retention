@@ -137,7 +137,7 @@ In order to perform the analysis, we need to preprocess the data. This includes 
 str(Spotify)
 ```
 
-## Date datatype
+## Convert into date datatype
 
 We had the date of release given in three different columns (day,month,year) as strings and we wanted to change this into one column and save it as datatype date. Typical format for date is '*2022-06-22*'. As a way to achieve this result, we used `paste()`with the parameter `sep = '-'` to aggregate the three columns into a new column , and then we converted the column datatype using `as.Date()` with parameter `format = "%Y-%m-%d"`. We dropped the original three columns since they were no longer relevant.
 
@@ -158,7 +158,7 @@ Spotify <- subset(Spotify, select = -c(released_year,
                                        released_day))
 ```
 
-## Categorical datatype
+## Convert into factor datatype
 
 We have noticed that tha columns **`key`** and **`mode`** were *categorical* and we wanted to convert them into *factors* using `as.factor()`*.*
 
@@ -168,17 +168,142 @@ Spotify$key <- as.factor(Spotify$key)
 Spotify$mode <- as.factor(Spotify$mode)
 ```
 
-Moreover, the columns **`in_deezer_playlists`**, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *categorical* so we have converted them into *integer* using `as.integer()`.
+## Convert into integer datatype
+
+Moreover, the columns **`streams`**, **`in_deezer_playlists`**, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *categorical* so we have converted them into *integer* using `as.integer()`.
 
 ```{r integer}
 # Change columns with categorical values into the right format (i.e. integer)
+Spotify$streams <- as.integer(Spotify$streams)
 Spotify$in_deezer_playlists <- as.integer(Spotify$in_deezer_playlists)
 Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
 ```
 
-# Data Summary
+## Separating main artist and features
+
+We also wanted to split the column **`artist(s)_name`** into more columns. One containing the main artist and the other containing the features of the song. Since in the column **`artist(s)_name`** the names are separated by commas and the main artist stands at the first position, we used the `strsplit()` function with `parameter split = ","` to split the column at each comma. We then have calculated the maximum number of artists in a single cell and padded the vectors with 0 to make them the same length. Then we have converted the list to a dataframe and we have noticed that there were a space as first charachter of each features cell and the name were wrong. So , before merging them to the main dataset, we have cleaned and renamed the features columns. Finally we have merged it into our original dataframe.
+
+```{r split}
+# Split the artist name column at each comma
+split_col <- strsplit(Spotify$artist.s._name,
+                      split = ",")
+
+
+# Get the maximum number of artists in a single cell
+max_artists <- max(sapply(split_col,
+                          length))
+
+
+# Make all the vectors the same length by padding with 0
+split_col <- lapply(split_col, function(x) { c(x,
+                                               rep(0,
+                                                   max_artists - length(x))) })
+
+
+# Convert the list to a dataframe
+split_df <- do.call(rbind,
+                    split_col)
+# Check the result
+head(split_df)
+
+# Removing the first charachter of the feautures columns
+
+
+#Name the columns # TODO : manually, as they don't stay that name after binding with original DF
+#names(split_df) <- c("Main Artist", paste0("Feat ", seq_len(max_artists - 1)))
+
+
+# Rename the columns
+
+
+# Merge into our original dataframe
+Spotify_with_splitted_artists <- cbind(Spotify,
+                                       split_df)
+
+# Write to .csv (for checking if we did it correctly)
+write.csv(Spotify_with_splitted_artists,
+          'data/spotify-2023-splitted-artists.csv',
+          row.names = FALSE)
+```
+
+# Exploratory Data Analysis (EDA)
+
+## Data Summary
 
 ```{r summary}
 # Check the summary of the dataset to understand the distribution of the data
 summary(Spotify)
+```
+
+### Histograms
+
+```{r histograms}
+# Access ONLY numerical data
+numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
+# Drop NA if needed
+numerical_Spotify <- na.omit(numerical_Spotify)
+# Get number of columns
+num_of_columns <- length(names(numerical_Spotify))
+# Set up the graphics window to have a suitable number of rows and columns
+par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))))
+# Now, create a histogram for each column
+for(col in names(numerical_Spotify)) {
+  hist(numerical_Spotify[[col]], breaks = 50, main = paste("Histogram of", col), xlab = col)
+} 
+```
+
+### Kernel Density Plots
+
+```{r density}
+
+# Loop through each numerical column
+for(col in names(numerical_Spotify)) {
+  # Create a density object for the column
+  dens <- density(numerical_Spotify[[col]], na.rm = FALSE)
+  # Create a new plot
+  plot(dens, main = paste("Kernel Density Plot of", col), xlab = col)
+  # Add a filled polygon to the plot
+  polygon(dens, col = "blue", border = "black")
+}
+
+```
+
+### Boxplots
+
+```{r boxplots}
+
+# Loop through each numerical column
+for(col in names(numerical_Spotify)) {
+  # Create a boxplot for the column
+  boxplot(numerical_Spotify[[col]], main = paste("Boxplot of", col), xlab = col)
+}
+
+```
+
+### Pairplot
+
+```{r pairplot}
+# Create a pairplot of the numerical columns
+pairs(numerical_Spotify, 
+      lower.panel = function(x, y) { },
+      upper.panel = function(x, y) {
+        points(x, y)
+      }
+)
+```
+
+## Correlation Matrix
+
+```{r correlation}
+# Reset graphic windows
+dev.off()
+
+# Calculate the correlation matrix
+cor_matrix <- cor(numerical_Spotify) # Only use numeric data
+
+# Change the size of the plots in R
+options(repr.plot.width=640, repr.plot.height=480)
+
+# Create the correlation plot
+corrplot(cor_matrix,type = 'upper', method = "number", number.cex = 0.5)
 ```
