@@ -110,7 +110,7 @@ head(Spotify)
 
 ## Handling missing values
 
-```{r missing}
+```{r missing values}
 # Check how many missing values there are in the dataset and where they are
 missing_values <- sum(is.na(Spotify))
 
