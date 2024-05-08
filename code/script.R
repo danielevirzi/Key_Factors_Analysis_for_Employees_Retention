@@ -13,6 +13,11 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 
 
 
+
+
+
+
+
 #attach(Spotify) # s.t. we can use the column names directly
 
 #detach(Spotify) # In case we want to load data new, always detach first
@@ -62,6 +67,8 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 #.    (again, for any model)
 # 19. Can we accurately classify songs into high-stream and low-stream categories 
 #.    based on the given features? (Discriminant Analysis)
+# 20. Can we find a difference in the stuff like valence, danceabilty etc. for songs that were
+#.    released in summer vs winter ?
 
 ######################################### STEP 2 DATA CLEANING & FILTERING #########################################
 
@@ -88,18 +95,6 @@ Spotify <- unique(Spotify)
 ##### DATA INTO THE RIGHT FORMATS #####
 
 
-### DATE COLUMN ### 
-
-# We have the date of release given in three different columns (day,month,year)
-# We want to change this into one column and save it as datatype date
-# Typical format for change : '2022-06-22' as string, then convert using as.Date
-
-# First we create a new column and store the date in the wanted format 
-Spotify$released_date <- paste(Spotify$released_year, Spotify$released_month, Spotify$released_day, sep = '-')
-# We give it the wanted datatype of DATE
-Spotify$released_date <- as.Date(Spotify$released_date, format = "%Y-%m-%d")
-# We can directly drop our other 3 columns storing the dates
-Spotify <- subset(Spotify, select = -c(released_year, released_month,released_day))
 
 
 ### CATEGORICAL COLUMNS ###
@@ -113,6 +108,8 @@ Spotify$mode <- as.factor(Spotify$mode)
 Spotify$streams <- as.integer(Spotify$streams)
 Spotify$in_deezer_playlists <- as.integer(Spotify$in_deezer_playlists)
 Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
+
+
 
 
 # Drop NA's again
@@ -143,59 +140,22 @@ Spotify_with_splitted_artists <- cbind(Spotify, split_df)
 write.csv(Spotify_with_splitted_artists, './data/spotify-2023-splitted-artists.csv', row.names = FALSE)
 
 
-##### GROUPING ARTISTS FOR NOVEL INFORMATION #####
 
+### DATE COLUMN ### 
 
-### RANKING MAIN ARTISTS BY STREAMS ###
-## FOR QUESSTION 1 ##
-# First we will do a ranking of all the main artists, i.e. not the features
-# and group their streams to do a ranking of how popular they are (in terms of 
-# streams)
+# We have the date of release given in three different columns (day,month,year)
+# We want to change this into one column and save it as datatype date
+# Typical format for change : '2022-06-22' as string, then convert using as.Date
 
+# First we create a new column and store the date in the wanted format 
+Spotify$released_date <- paste(Spotify$released_year, Spotify$released_month, Spotify$released_day, sep = '-')
+# We give it the wanted datatype of DATE
+Spotify$released_date <- as.Date(Spotify$released_date, format = "%Y-%m-%d")
+# We keep the date structure stored, as we will need it later on for question 20
+Spotify_dates <- subset(Spotify, select = c(released_year, released_month,released_day))
+# We can directly drop our other 3 columns storing the dates
+Spotify <- subset(Spotify, select = -c(released_year, released_month,released_day))
 
-
-# Get all the main artists
-
-
-
-# Create an empty list to store the stream sums
-streams_per_main_artist <- list()
-energy_per_main_artist <- list()
-
-group_by_artists <- split(Spotify_with_splitted_artists, Spotify_with_splitted_artists$"1")
-
-for(i in 1:length(group_by_artists)) {
-  # Calculate the sum for streams
-  sum_value <- sum(group_by_artists[[i]]$streams, na.rm = TRUE)
-  # Calculate the mean for specific elements in the song
-  # e.g. energy
-  mean_value <- mean(group_by_artists[[i]]$energy_., na.rm = TRUE)
-  
-  streams_per_main_artist[[i]] <- data.frame(group_column = names(group_by_artists)[i], sum = sum_value)
-  energy_per_main_artist[[i]] <- data.frame(group_column = names(group_by_artists)[i], mean = mean_value)
-}
-
-# Combine all the dataframes 
-
-grouped_main_artists_and_streams <- do.call(rbind, streams_per_main_artist)
-grouped_main_artists_and_energy <- do.call(rbind, energy_per_main_artist)
-
-grouped_main_artists <- merge(grouped_main_artists_and_streams, grouped_main_artists_and_energy, by = 'group_column')
-
-
-
-
-# Order by the streams
-# This dataframe gives us the ranking of main artists !
-grouped_main_artists <- grouped_main_artists[order(grouped_main_artists$sum, decreasing = TRUE), ]
-
-# Rename columns
-colnames(grouped_main_artists) <- c("Artist", "Streams", 'Energy')
-
-# Select the top 10 artists
-top_10 <- grouped_main_artists[1:10, ]
-
-barplot(top_10$Streams, names.arg = top_10$Artist, xlab='Artists', ylab='Streams')
 
 
 
@@ -312,10 +272,125 @@ pairs(numerical_Spotify, diag.panel=panel.hist, upper.panel=panel.cor, lower.pan
 
 
 
+####################################### QUESTION 1 #######################################
+# First we will do a ranking of all the main artists, i.e. not the features
+# and group their streams to do a ranking of how popular they are (in terms of 
+# streams)
 
 
 
-##### FEATURE SELECTION #####
+# Get all the main artists
+
+
+
+# Create an empty list to store the stream sums
+streams_per_main_artist <- list()
+energy_per_main_artist <- list()
+
+group_by_artists <- split(Spotify_with_splitted_artists, Spotify_with_splitted_artists$"1")
+
+for(i in 1:length(group_by_artists)) {
+  # Calculate the sum for streams
+  sum_value <- sum(group_by_artists[[i]]$streams, na.rm = TRUE)
+  # Calculate the mean for specific elements in the song
+  # e.g. energy
+  mean_value <- mean(group_by_artists[[i]]$energy_., na.rm = TRUE)
+  
+  streams_per_main_artist[[i]] <- data.frame(group_column = names(group_by_artists)[i], sum = sum_value)
+  energy_per_main_artist[[i]] <- data.frame(group_column = names(group_by_artists)[i], mean = mean_value)
+}
+
+# Combine all the dataframes 
+
+grouped_main_artists_and_streams <- do.call(rbind, streams_per_main_artist)
+grouped_main_artists_and_energy <- do.call(rbind, energy_per_main_artist)
+
+grouped_main_artists <- merge(grouped_main_artists_and_streams, grouped_main_artists_and_energy, by = 'group_column')
+
+
+
+
+# Order by the streams
+# This dataframe gives us the ranking of main artists !
+grouped_main_artists <- grouped_main_artists[order(grouped_main_artists$sum, decreasing = TRUE), ]
+
+# Rename columns
+colnames(grouped_main_artists) <- c("Artist", "Streams", 'Energy')
+
+# Select the top 10 artists
+top_10 <- grouped_main_artists[1:10, ]
+
+barplot(top_10$Streams, names.arg = top_10$Artist, xlab='Artists', ylab='Streams')
+
+
+
+####################################### QUESTION 20 #######################################
+# Can we find a difference in the stuff like valence, danceabilty etc. for songs that were released in summer vs winter ?
+
+
+# We will use ANOVA for this analysis
+# In particular, we will group songs by summer & winter time and check danceability & energy. 
+# Our hypothesis is that in summer time, songs will have more danceability & energy percentages
+# To put it in a statistical framework, we will compare the mean of the two groups (summer & winter)
+# with respect to A. danceability and B. energy.
+
+# We define "summer time" as the duration from may-august (5-8)
+# We define "winter time" as the duration from october-january (10-12 % 1)
+
+# Add a new column to the Spotify dataframe which contains the summer/winter information
+# Other months will be just called "other"
+Spotify$time_of_year <- ifelse(Spotify_dates$released_month %in% c(5, 6, 7, 8), "summer",
+                               ifelse(Spotify_dates$released_month %in% c(10, 11, 12, 1), "winter", "other")) 
+
+
+
+
+# Now, we group after the times of the year 
+
+danceability_per_time_of_year <- list()
+energy_per_time_of_year <- list()
+
+group_by_time_of_year <- split(Spotify, Spotify$time_of_year)
+
+for(i in 1:length(group_by_time_of_year)) {
+
+  mean_value_danceability <- mean(group_by_time_of_year[[i]]$danceability_., na.rm = TRUE)
+  mean_value_energy <- mean(group_by_time_of_year[[i]]$energy_., na.rm = TRUE)
+  
+  danceability_per_time_of_year[[i]] <- data.frame(group_column = names(group_by_time_of_year)[i], mean = mean_value_danceability)
+  energy_per_time_of_year[[i]] <- data.frame(group_column = names(group_by_time_of_year)[i], mean = mean_value_energy)
+}
+
+
+# Combine all the dataframes 
+
+grouped_time_of_year_and_danceability <- do.call(rbind, danceability_per_time_of_year)
+grouped_time_of_year_and_energy <- do.call(rbind, energy_per_time_of_year)
+
+grouped_time_of_year <- merge(grouped_time_of_year_and_danceability, grouped_time_of_year_and_energy, by = 'group_column')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
