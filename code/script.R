@@ -15,7 +15,45 @@ Spotify <- read.csv("data/spotify-2023.csv")
 ######################################### STEP 1 QUESTIONS WE WANT TO ANSWER #########################################
 
 # 1. Which artists are the most famous ones ?
-
+# 2. Does it help more to be in a specific playlist stream-wise or are their 
+#    effect the same ?
+# 3. Is there a "mix" for the perfect song considering elements such as bpm, key
+#    energy, valence etc. ?
+# 4. What are the most prevelant features when it comes to estimating streams 
+#.   (Multiple Linear Regression, Feature Selection)
+# 5. What Relationships can we find between features such as energy, danceability
+#.   etc. ? Meaning, does one imply the other? (Partly Feature Selection)
+# 6. Does the artist count in a song have any impact whatsoever on the success
+#    of a song ?
+# 7. How accurately can we predict an artists streams, based on the relase date
+#.   (Regression with x-axis date, y-axis Streams, then do inference)
+# 8. What about Outliers/High Leverage Points ? Do they influence regression results ?
+# 9. Can we find any relationship between the key / mode of a song and its 
+#.   success in terms of streams? (Categorical Regressor key/mode)
+# 10. Dancability & Energy similar distribution --> can we find any 
+#.    significant difference in their means? (ANOVA / Tukeys Method) // or
+#.    in lecture we did it with categorical variables after using dummy variables
+#.    to make them to numerical ones, so we could do it on key/mode 
+# 11. Can we predict the number of streams on Spotify based on the song’s 
+#.    presence in Spotify, Apple Music, Deezer, and Shazam charts? 
+#.    What is the correlation between these variables?
+# 12. Is there a linear relationship between the song’s danceability, valence, 
+#.    energy, acousticness, instrumentalness, liveness, speechiness, 
+#.    and its popularity (number of streams or presence in charts)?
+# 13. How well does (any of our) model fit the data? 
+#.    What is the residual standard error and the R^2 statistic?
+# 14. s the variance of the error terms constant or do we see patterns in the residual plots?
+# 15. Are there any non-linear relationships between the predictors and the response? 
+#.    Would a polynomial regression provide a better fit? (Again, to any model)
+# 16. Is there a significant difference in the number of streams or presence 
+#.    in charts between songs released in different years, months, or days (ANOVA/ANCOVA)
+# 17. Does the number of artists contributing to a song have an effect on its popularity,
+#.    after controlling for other factors?
+# 18. Can we improve the model fit by using a generalized linear model that 
+#.    allows for response distributions other than the normal distribution?
+#.    (again, for any model)
+# 19. Can we accurately classify songs into high-stream and low-stream categories 
+#.    based on the given features? (Discriminant Analysis)
 
 ######################################### STEP 2 DATA CLEANING & FILTERING #########################################
 
@@ -30,6 +68,13 @@ summary(Spotify)
 Spotify <- na.omit(Spotify)
 
 
+##### HANDLE DUPLICATES ######
+
+# Check how many duplicates there are in the dataset
+duplicates <- sum(duplicated(Spotify))
+
+# Remove all duplicates from the dataset
+Spotify <- unique(Spotify)
 
 
 ##### DATA INTO THE RIGHT FORMATS #####
@@ -151,6 +196,11 @@ barplot(top_10$Streams, names.arg = top_10$Artist, xlab='Artists', ylab='Streams
 ######################################### STEP 3 EXPLORATION OF DATA #########################################
 
 
+# Access ONLY numerical data
+numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
+# Drop NA if needed
+numerical_Spotify <- na.omit(numerical_Spotify)
+
 
 ##### CORRELATION MATRIX #####
 
@@ -172,15 +222,16 @@ corrplot(cor_matrix,type = 'upper', method = "number", number.cex = 0.5)
 
 
 ##### HISTOGRAMS #####
+# Reset graphic windows
+dev.off()
 
 
-
-# Access ONLY numerical data
-numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
-# Drop NA if needed
-numerical_Spotify <- na.omit(numerical_Spotify)
 # Get number of columns
 num_of_columns <- length(names(numerical_Spotify))
+# Check for plot.new() : figure margins too large error
+par("mar")
+# Set new
+par(mar=c(1,1,1,1))
 # Set up the graphics window to have a suitable number of rows and columns
 par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))))
 # Now, create a histogram for each column
@@ -189,7 +240,11 @@ for(col in names(numerical_Spotify)) {
 }
 
 ##### KERNEL DENSITY GRAPHS #####
-
+# Reset graphic windows
+dev.off()
+par(mar=c(1,1,1,1))
+# Set up the graphics window to have a suitable number of rows and columns
+par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))))
 # Loop through each numerical column
 for(col in names(numerical_Spotify)) {
   # Create a density object for the column
@@ -202,13 +257,48 @@ for(col in names(numerical_Spotify)) {
 
 
 ##### PAIR GRAPHS #####
+# Reset graphic windows
+dev.off()
+par(mar=c(1,1,1,1))
 
-pairs(numerical_Spotify, 
-      lower.panel = function(x, y) { },
-      upper.panel = function(x, y) {
-        points(x, y)
-      }
-)
+####### Define functions (given in LectureCodeR) #######
+
+
+## panel.hist function
+## puts histograms on the diagonal
+
+panel.hist <- function(x, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h <- hist(x, plot = FALSE)
+  breaks <- h$breaks; nB <- length(breaks)
+  y <- h$counts; y <- y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+
+## panel.cor function
+## put (absolute) correlations on the upper panels,
+## with size proportional to the correlations.
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r <- abs(cor(x, y))
+  txt <- format(c(r, 0.123456789), digits = digits)[1]
+  txt <- paste0(prefix, txt)
+  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+
+####### Define functions (given in LectureCodeR) #######
+
+pairs(numerical_Spotify, diag.panel=panel.hist, upper.panel=panel.cor, lower.panel=panel.smooth)
+
+
+
 # COMMENT : Artist count useless, no correlation information
 
 
