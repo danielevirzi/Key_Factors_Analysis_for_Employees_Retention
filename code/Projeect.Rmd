@@ -162,7 +162,7 @@ Spotify$key <- as.factor(Spotify$key)
 Spotify$mode <- as.factor(Spotify$mode)
 ```
 
-Moreover, the columns `in_deezer_playlists`, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *categorical* so we have converted them into *integer* using `as.integer()`.
+Moreover, the columns **`in_deezer_playlists`**, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *categorical* so we have converted them into *integer* using `as.integer()`.
 
 ```{r integer}
 # Change columns with categorical values into the right format (i.e. integer)
