@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-This project is a collaborative effort between two students, **Marlon Helbing** and **Daniele Virzì**. It is an academic project that will be graded based on the quality and depth of our analysis. The project aims to apply the concepts and techniques learned in the **Statistical Learning Course** to a real-world dataset.
+This project is a collaborative effort between two students, **Marlon Helbing** and **Daniele Virzì**. It is an academic project that will be graded based on the quality and depth of our analysis. The project aims to apply the concepts and techniques from the **Statistical Learning Course** to a real-world dataset.
 
 ## Project goals
 
@@ -75,17 +75,24 @@ The dataset contains the following columns:
 
 -   **`speechiness_%`**: *Amount of spoken words in the song*.
 
+## Methodology
+
+
 # Data Loading
 
-As previously stated, the purpose of this project is to assess the knowledge we have gained from the **Statistical Learning Course**. Because of this, we were only permitted to utilize the models and techniques covered in the course for our project work; we were not permitted to use any data analysis techniques that were not covered in class or any `Tidyverse` R-packages, like `ggplot` or `ggplot2`.
+As previously stated, the scope of this project is to assess the knowledge we have gained from the **Statistical Learning Course**. Because of this, we were only permitted to utilize the models and techniques covered in the course for our project work; we were not permitted to use any data analysis techniques that were not covered in class or any `Tidyverse` R-packages, like `ggplot` or `ggplot2`.
 
 ## Packages required
+
+To analyze this data, we will use the following R packages:
 
 ```{r imports, echo=FALSE}}
 library(corrplot)
 ```
 
 ## Loading the dataset
+
+The dataset is imported to R as CSV files.
 
 ```{r data, echo=FALSE}
 Spotify <- read.csv("spotify-2023.csv")
@@ -98,7 +105,7 @@ In this section, we had performed some data cleaning tasks to ensure that the da
 ## Checking the structure of the data
 
 ```{r explore}
-# Check the first 5 rows of the dataset in order to understand the structure of the data
+# Check the first 5 rows of the dataset to understand the structure of the data
 head(Spotify)
 ```
 
@@ -127,7 +134,7 @@ Spotify <- unique(Spotify)
 In order to perform the analysis, we need to preprocess the data. This includes changing the datatype of some columns, removing unnecessary columns, and handling categorical values.
 
 ```{r structure}
-# Check the structure of the dataset in order to understand the datatypes
+# Check the structure of the dataset to understand the datatypes
 str(Spotify)
 ```
 
@@ -173,6 +180,6 @@ Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
 # Data Summary
 
 ```{r summary}
-# Check the summary of the dataset in order to understand the distribution of the data
+# Check the summary of the dataset to understand the distribution of the data
 summary(Spotify)
 ```
