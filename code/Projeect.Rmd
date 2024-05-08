@@ -5,8 +5,16 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=False}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r directory, echo=FALSE}
+# Clear current working environment
+rm(list=ls())
+
+# Get the directory of the current script
+script_dir <- getwd()
 ```
 
 # Introduction
@@ -94,7 +102,7 @@ library(corrplot)
 The dataset is imported to R as CSV files.
 
 ```{r data, echo=FALSE}
-Spotify <- read.csv("spotify-2023.csv")
+Spotify <- read.csv("./data/spotify-2023.csv")
 ```
 
 # Data Cleaning
