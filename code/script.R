@@ -1,9 +1,14 @@
 # Setting the correct working directory (Location where our data & R files are stored)
+# We set it via relative paths such that we can work on the same code without 
+# the need to change it all the time
 
+# Get the directory of the current script
+script_dir <- getwd()
+
+Spotify <- read.csv("./data/spotify-2023.csv")
+
+# Clear current working environment
 rm(list=ls())
-
-setwd('/Users/marlon/Desktop/R_project')
-Spotify <- read.csv("data/spotify-2023.csv")
 
 #attach(Spotify) # s.t. we can use the column names directly
 
@@ -132,7 +137,7 @@ split_df <- do.call(rbind, split_col)
 # Merge into our original dataframe
 Spotify_with_splitted_artists <- cbind(Spotify, split_df)
 # Write to .csv (for checking if we did it correctly)
-write.csv(Spotify_with_splitted_artists, 'data/spotify-2023-splitted-artists.csv', row.names = FALSE)
+write.csv(Spotify_with_splitted_artists, './data/spotify-2023-splitted-artists.csv', row.names = FALSE)
 
 
 ##### GROUPING ARTISTS FOR NOVEL INFORMATION #####
