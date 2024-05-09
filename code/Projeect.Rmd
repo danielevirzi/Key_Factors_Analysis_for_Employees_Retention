@@ -2,11 +2,13 @@
 title: "Statistical Learning Project"
 author: "Marlon Helbing, Daniele Virzì"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: 
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, fig.width=10, fig.height=15)
 ```
 
 ```{r directory, echo=FALSE}
@@ -93,7 +95,7 @@ As previously stated, the scope of this project is to assess the knowledge we ha
 
 To analyze this data, we will use the following R packages:
 
-```{r imports, echo=FALSE}}
+```{r imports, echo=FALSE}
 library(corrplot)
 ```
 
@@ -102,7 +104,7 @@ library(corrplot)
 The dataset is imported to R as CSV files.
 
 ```{r data, echo=FALSE}
-Spotify <- read.csv("./data/spotify-2023.csv")
+Spotify <- read.csv("~/Desktop/R_project/data/spotify-2023.csv")
 ```
 
 # Data Cleaning
@@ -191,7 +193,7 @@ Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
 
 We also wanted to split the column **`artist(s)_name`** into more columns. One containing the main artist and the other containing the features of the song. Since in the column **`artist(s)_name`** the names are separated by commas and the main artist stands at the first position, we used the `strsplit()` function with `parameter split = ","` to split the column at each comma. We then have calculated the maximum number of artists in a single cell and padded the vectors with 0 to make them the same length. Then we have converted the list to a dataframe and we have noticed that there were a space as first charachter of each features cell and the name were wrong. So , before merging them to the main dataset, we have cleaned and renamed the features columns. Finally we have merged it into our original dataframe.
 
-```{r split}
+```{r split, warning=FALSE} 
 # Split the artist name column at each comma
 split_col <- strsplit(Spotify$artist.s._name,
                       split = ",")
@@ -230,7 +232,7 @@ Spotify_with_splitted_artists <- cbind(Spotify,
 
 # Write to .csv (for checking if we did it correctly)
 write.csv(Spotify_with_splitted_artists,
-          'data/spotify-2023-splitted-artists.csv',
+          '~/Spotify_with_splitted_artists.csv',
           row.names = FALSE)
 ```
 
@@ -248,15 +250,25 @@ summary(Spotify)
 ```{r histograms}
 # Access ONLY numerical data
 numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
+
 # Drop NA if needed
 numerical_Spotify <- na.omit(numerical_Spotify)
+
 # Get number of columns
 num_of_columns <- length(names(numerical_Spotify))
+
 # Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))))
+par(mfrow = c(9, 2), 
+    mar = c(3, 3, 3, 3))
+
 # Now, create a histogram for each column
 for(col in names(numerical_Spotify)) {
-  hist(numerical_Spotify[[col]], breaks = 50, main = paste("Histogram of", col), xlab = col)
+  hist(numerical_Spotify[[col]],
+       breaks = 50,
+       main = paste(col),
+       xlab = col,
+       ylab = "Frequency",
+       lwd = 0.5)
 } 
 ```
 
@@ -264,26 +276,46 @@ for(col in names(numerical_Spotify)) {
 
 ```{r density}
 
+# Set up the graphics window to have a suitable number of rows and columns
+par(mfrow = c(9, 2), 
+    mar = c(3, 3, 3, 3))
+
+
 # Loop through each numerical column
 for(col in names(numerical_Spotify)) {
   # Create a density object for the column
-  dens <- density(numerical_Spotify[[col]], na.rm = FALSE)
+  dens <- density(numerical_Spotify[[col]],
+                  na.rm = FALSE)
   # Create a new plot
-  plot(dens, main = paste("Kernel Density Plot of", col), xlab = col)
+  plot(dens, 
+       main = paste(col), 
+       xlab = col, 
+       ylab = "Density",
+       lwd = 0.5)
   # Add a filled polygon to the plot
-  polygon(dens, col = "blue", border = "black")
+  polygon(dens,
+          col = "blue",
+          border = "black")
 }
 
 ```
 
 ### Boxplots
 
-```{r boxplots}
+```{r boxplots, warning=FALSE}
+
+# Set up the graphics window to have a suitable number of rows and columns
+par(mfrow = c(9, 2), 
+    mar = c(3, 3, 3, 3))
 
 # Loop through each numerical column
 for(col in names(numerical_Spotify)) {
   # Create a boxplot for the column
-  boxplot(numerical_Spotify[[col]], main = paste("Boxplot of", col), xlab = col)
+  boxplot(numerical_Spotify[[col]],
+          main = paste(col),
+          xlab = col,
+          ylab = "Value",
+          lwd = 0.5)
 }
 
 ```
