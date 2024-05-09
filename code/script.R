@@ -345,6 +345,40 @@ Spotify$time_of_year <- ifelse(Spotify_dates$released_month %in% c(5, 6, 7, 8), 
 
 
 
+
+# Perform the ANOVA test ; Problem here : we perform between summer & winter & other !!!!
+result_anova <- aov(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify)
+
+# Print the summary of the ANOVA test
+summary(result_anova)
+
+
+# Reset graphic windows
+dev.off()
+#par(mar=c(1,1,1,1))
+
+# Plot the ANOVA result
+boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Energy")
+
+
+
+
+# So we do TukeyHSD to perform between classes :
+
+result_tuskey <- TukeyHSD(result)
+
+print(result_tuskey)
+
+# and see p value 0.036 between winter & summer --> we reject H0 and say that there
+# is a significant difference, as we assumed ! 
+# In the ANOVA plot, we can see that the mean energy for summer is higher than for 
+# winter ; just what we expected !
+
+
+
+
+
+######################## DONT NEED THIS FOR THIS QUESTION ########################
 # Now, we group after the times of the year 
 
 danceability_per_time_of_year <- list()
@@ -369,7 +403,7 @@ grouped_time_of_year_and_energy <- do.call(rbind, energy_per_time_of_year)
 
 grouped_time_of_year <- merge(grouped_time_of_year_and_danceability, grouped_time_of_year_and_energy, by = 'group_column')
 
-
+######################## DONT NEED THIS FOR THIS QUESTION ########################
 
 
 
