@@ -1,349 +1,293 @@
 ---
-title: "Statistical Learning Project"
-author: "Marlon Helbing, Daniele Virzì"
-date: "`r Sys.Date()`"
-output: 
+title: "Introduction to Markdown and knitr"
+author: "Alberto Roverato"
+font: 12pt
+output:
+  html_document:
+    toc: true
+    # number_sections: true
   pdf_document:
-    latex_engine: xelatex
+    toc: true
+    # number_sections: true
+  word_document:
+    toc: true
+    # number_sections: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.width=10, fig.height=15)
+\
+
+## What is Markdown?
+
+-   Markdown is a (simple) markup language for creating formatted text using a plain-text editor.
+
+-   R Markdown is a free, open source tool that is installed like any other R package.
+
+-   In fact, you need the *rmarkdown* package, but you don't need to explicitly install it or load it, as RStudio automatically does both when needed.
+
+-   It enables you to keep all of your code, results, plots, and writing in one place.
+
+-   It allows you to export your work to numerous formats including PDF, Microsoft Word, a slideshow, or an HTML document for use in a website.
+
+-   Some examples are given below, but see also the *Markdown Quick Reference* in the *Help*
+
+\
+
+## 1. YAML header
+
+YAML header is a short blob of text, specially formatted with `key: value` pairs tags, that seats at the top of an Rmarkdown document. It is demarcated by three dashes `---` on either end. Instances of YAML arguments are "title", "author", and "output".
+
+\
+
+## 2. Markdown syntax
+
+### 2.1 Headers
+
+This is how to obtain *headers* of different size
+
+# Header level 1
+
+## Header level 2
+
+### Header level 3
+
+#### Header level 4
+
+##### Header level 5
+
+###### Header level 6
+
+\
+
+### 2.2 Italic and Bold
+
+This is *italic text*
+
+This is also _italic text_
+
+This is **bold text**
+
+This is also __bold text__
+
+And this is ***both bold and italic text***
+
+And this is also ___both bold and italic text___
+
+Markdown applications don't agree on how to handle underscores in the middle of a word. For compatibility, use asterisks to bold and italicize the middle of a word for emphasis.
+
+Note that, as explained below, if you use the `RStudio’s visual markdown editor`, then underscores (\_) will be converted into asterisks (\*).
+
+\
+
+### 2.3 Highlighted text and rules
+
+You can also highlight a text using a pair of backticks 
+so that \`like this\` will be printed as `like this`
+
+An horizontal rule can be obtained with `***`
+
+***
+
+but also with `---`
+
+---
+
+or with `___`
+
+___
+
+\
+
+### 2.4 Ordered lists
+
+These is how to do an ordered list:
+
+1.  the first item
+
+2.  the second item
+
+3.  the third item
+
+    -   one unordeded sub-item
+    -   one unordered sub-item
+
+\
+
+This is an unordered list:
+
+-   the first unordered item
+
+-   the second unordered item
+
+-   the third unordered item
+
+    -   the first unordered sub-item
+    -   the second unordered sub-item
+
+\
+
+### 2.5 Backslash
+
+There are multiple ways to add a blank line in markdown. One way is to use the backslash (`\`) symbol. For example you can add two blank lines...
+
+\
+\
+
+...like this.
+
+Another use of backslash escapes is to generate literal characters which would otherwise have special meaning in Markdown’s formatting syntax. For example, if you wanted to surround a word with literal asterisks you can use backslashes before the asterisks, like this,
+
+\*literal asterisks\*
+
+because otherwise asterisks are use for italic fonts, like this: *literal asterisks*. 
+
+\
+
+### 2.6 Links
+
+To turn a URL or an email address into a link, enclose it in angle brackets, 
+
+<https://www.google.it/>
+
+or you can enclose the link text in brackets and then follow it immediately with the URL in parentheses, like this:
+
+My favorite search engine is [GOOGLE](https://www.google.it/)
+
+\
+
+### 2.7 Writing math
+
+LaTex equations, inline, like this $\sqrt{\frac{1}{\pi}}$ or displayed like this $$f(x)=\lambda e^{-\lambda x}$$
+
+A pair of tildes (\~) turn text to a subscript, e.g., H~3~PO~4~. A pair of carets (\^) produce a superscript, e.g., Cu^2+^.
+
+\
+
+### 2.8 Tables
+
+To add a table, use three or more hyphens (---) to create each column’s header, and use pipes (\|) to separate each column. For compatibility, you should also add a pipe on either end of the row.
+
+You can align text in the columns to the left, right, or center by adding a colon (:) to the left, right, or on both side of the hyphens within the header row.
+
+| Example  |      Of       |  Table |
+|:---------|:-------------:|-------:|
+| col 1 is | left-aligned  | \$1600 |
+| col 2 is |   centered    |   \$12 |
+| col 3 is | right-aligned |    \$1 |
+
+\
+
+## 3. knitr
+
+-   Is an engine for dynamic report generation with R. It is a package in the programming language R that enables integration of R code into `LaTeX`, LyX, HTML, `Markdown`, AsciiDoc, and reStructuredText documents.
+
+-   The basic idea in knitr is that your regular text document will be interrupted by `chunks` of code delimited in a special way.
+
+\
+
+```{r}
+paste("Hello", "World")
+rnorm(1:5)
 ```
 
-```{r directory, echo=FALSE}
-# Clear current working environment
-rm(list=ls())
+\
 
-# Get the directory of the current script
-script_dir <- getwd()
+It is possible to add a chunk name inside braces after the `r`.
+
+\
+
+```{r my-first-chunk}
+paste("Hello", "World")
+rnorm(1:5)
 ```
 
-# Introduction
+\
 
-This project is a collaborative effort between two students, **Marlon Helbing** and **Daniele Virzì**. It is an academic project that will be graded based on the quality and depth of our analysis. The project aims to apply the concepts and techniques from the **Statistical Learning Course** to a real-world dataset.
+The chunk name is not necessarily required however, it is good practice to give each chunk a unique name to support more advanced knitting approaches. Furthermore, in the RStudio IDE, you can navigate to specific chunks. Open the code chunk navigation window, located in the bottom left-hand side of the Source pane.
 
-## Project goals
+\
 
-The main objectives of this project are:
+### 3.1 Some chunk options
 
-1.  **Exploratory Data Analysis (EDA)**: We aim to uncover patterns and trends in the data that could provide insights into what makes a song popular on ***Spotify***.
+If `echo=FALSE` knitr will not display the code in the final document, but the results will appear in the final document. This is a useful way to embed figures.
 
-2.  **Regression Model**: This model aims to predict a song's popularity, in terms of streams, based on various features present in the dataset.
-
-## Dataset
-
--   [**Most Streamed Spotify Songs 2023**](https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023): This dataset, sourced from Kaggle, is a comprehensive collection of the most streamed songs of 2023 as listed on Spotify. It was chosen for our project due to our shared love for music and our domain knowledge in this area. It provides insights into each song's attributes, popularity, and presence on various music platforms. This makes it an excellent resource for our project, as it allows us to explore a wide range of factors that could potentially influence a song's popularity.
-
-The dataset contains the following columns:
-
-1.  **`track_name`**: *Name of the song*.
-
-2.  **`artist(s)_name`**: *Name of the artist(s) of the song*.
-
-3.  **`artist_count`**: *Number of artists contributing to the song*.
-
-4.  **`released_year`**: *Year when the song was released*.
-
-5.  **`released_month`**: *Month when the song was released*.
-
-6.  **`released_day`**: *Day of the month when the song was released*.
-
-7.  **`in_spotify_playlists`**: *Number of Spotify playlists the song is included in*.
-
-8.  **`in_spotify_charts`**: *Presence and rank of the song on Spotify charts*.
-
-9.  **`streams`**: *Total number of streams on Spotify*.
-
-10. **`in_apple_playlists`**: *Number of Apple Music playlists the song is included in*.
-
-11. **`in_apple_charts`**: *Presence and rank of the song on Apple Music charts*.
-
-12. **`in_deezer_playlists`**: *Number of Deezer playlists the song is included in*.
-
-13. **`in_deezer_charts`**: *Presence and rank of the song on Deezer charts*.
-
-14. **`in_shazam_charts`**: *Presence and rank of the song on Shazam charts*.
-
-15. **`bpm`**: *Beats per minute, a measure of song tempo*.
-
-16. **`key`**: *Key of the song*.
-
-17. **`mode`**: *Mode of the song (major or minor)*.
-
-18. **`danceability_%`**: *Percentage indicating how suitable the song is for dancing*.
-
-19. **`valence_%`**: *Positivity of the song's musical content*.
-
-20. **`energy_%`**: *Perceived energy level of the song*.
-
-21. **`acousticness_%`**: *Amount of acoustic sound in the song*.
-
-22. **`instrumentalness_%`**: *Amount of instrumental content in the song*.
-
-23. **`liveness_%`**: *Presence of live performance elements*.
-
-24. **`speechiness_%`**: *Amount of spoken words in the song*.
-
-## Methodology
-
-# Data Loading
-
-As previously stated, the scope of this project is to assess the knowledge we have gained from the **Statistical Learning Course**. Because of this, we were only permitted to utilize the models and techniques covered in the course for our project work; we were not permitted to use any data analysis techniques that were not covered in class or any `Tidyverse` R-packages, like `ggplot` or `ggplot2`.
-
-## Packages required
-
-To analyze this data, we will use the following R packages:
-
-```{r imports, echo=FALSE}
-library(corrplot)
+```{r try-echo-false, echo=FALSE}
+paste("Hello", "World")
+rnorm(1:5)
 ```
 
-## Loading the dataset
+\
 
-The dataset is imported to R as CSV files.
+If `eval=FALSE` then knitr will not run the code chunk
 
-```{r data, echo=FALSE}
-Spotify <- read.csv("~/Desktop/R_project/data/spotify-2023.csv")
+```{r try-eval-false, eval=FALSE}
+paste("Hello", "World")
+rnorm(1:5)
 ```
 
-# Data Cleaning
+\
 
-In this section, we had performed some data cleaning tasks to ensure that the dataset is ready for analysis. This includes checking and handling appropriately missing values and duplicates.
+If `include=FALSE` knitr will run the chunk code but not include the chunk in the final document. However, the results can be used by other chunks.
 
-## Checking the structure of the data
-
-```{r explore}
-# Check the first 5 rows of the dataset to understand the structure of the data
-head(Spotify)
+```{r try-include-false, include=FALSE}
+paste("Hello", "World")
+rnorm(1:5)
 ```
 
-## Handling missing values
+\
 
-```{r missing values}
-# Check how many missing values there are in the dataset and where they are
-missing_values <- sum(is.na(Spotify))
+### 3.2 Inline R code 
 
-# Remove all rows where there is atleast one missing value in some column
-Spotify <- na.omit(Spotify)
+Inline R code is embedded in the narratives of the document using the syntax  \` r \`, for example \` r sqrt(9)\*3\`  will result in the output `r sqrt(9)*3`. 
+
+\
+
+### 3.3 Figures
+
+```{r include-figure}
+hist(rnorm(1000), freq= FALSE, col="blue")
 ```
 
-## Handling duplicates
+some options for plots
 
-```{r duplicates}
-# Check how many duplicates there are in the dataset
-duplicates <- sum(duplicated(Spotify))
-
-# Remove all duplicates from the dataset
-Spotify <- unique(Spotify)
+```{r figure-with-options, fig.height=3, fig.width=3, fig.align="right"}
+hist(rnorm(1000), freq= FALSE, col="blue")
 ```
 
-# Data Preprocessing
+\
 
-In order to perform the analysis, we need to preprocess the data. This includes changing the datatype of some columns, removing unnecessary columns, and handling categorical values.
+### 3.4 Tables
 
-```{r structure}
-# Check the structure of the dataset to understand the datatypes
-str(Spotify)
+By default, R Markdown displays data frames and matrices as they would be in the R terminal.
+
+```{r example-of-table}
+library(ISLR2)
+data(Auto)
+Auto[1:5,]
 ```
 
-## Convert into date datatype
+\
 
-We had the date of release given in three different columns (day,month,year) as strings and we wanted to change this into one column and save it as datatype date. Typical format for date is '*2022-06-22*'. As a way to achieve this result, we used `paste()`with the parameter `sep = '-'` to aggregate the three columns into a new column , and then we converted the column datatype using `as.Date()` with parameter `format = "%Y-%m-%d"`. We dropped the original three columns since they were no longer relevant.
+If you prefer that data be displayed with additional formatting you can use the function `kable()` in the package `knitr`
 
-```{r date}
-# First we create a new column and store the date in the wanted format 
-Spotify$released_date <- paste(Spotify$released_year,
-                               Spotify$released_month,
-                               Spotify$released_day,
-                               sep = '-')
-
-# We give it the wanted datatype of DATE
-Spotify$released_date <- as.Date(Spotify$released_date,
-                                 format = "%Y-%m-%d")
-
-# We can directly drop our other 3 columns storing the dates
-Spotify <- subset(Spotify, select = -c(released_year,
-                                       released_month,
-                                       released_day))
+```{r function-kable-for-talbles}
+library(knitr)
+kable(Auto[1:5,], format = "simple")
+#
+# "c"enter, "l"eft and "r"ight alignment of columns
+#
+kable(Auto[1:5,], format = "simple", align = "clrclrccl")
+#
+# change column names
+#
+kable(Auto[1:5,], format = "simple", align = "clrclrccl", col.names = LETTERS[1:9])
 ```
 
-## Convert into factor datatype
+\
 
-We have noticed that tha columns **`key`** and **`mode`** were *categorical* and we wanted to convert them into *factors* using `as.factor()`*.*
+## 4 RStudio’s visual markdown editor
 
-```{r factor}
-# Change columns with categorical values into the right format (i.e. factor)
-Spotify$key <- as.factor(Spotify$key)
-Spotify$mode <- as.factor(Spotify$mode)
-```
+The RStudio IDE includes a visual markdown editor that displays changes in real-time and provides support for technical writing. 
 
-## Convert into integer datatype
+To switch into the visual mode for a markdown document click the “Visual” button located on the left side of the editor toolbar.
 
-Moreover, the columns **`streams`**, **`in_deezer_playlists`**, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *categorical* so we have converted them into *integer* using `as.integer()`.
-
-```{r integer}
-# Change columns with categorical values into the right format (i.e. integer)
-Spotify$streams <- as.integer(Spotify$streams)
-Spotify$in_deezer_playlists <- as.integer(Spotify$in_deezer_playlists)
-Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
-```
-
-## Separating main artist and features
-
-We also wanted to split the column **`artist(s)_name`** into more columns. One containing the main artist and the other containing the features of the song. Since in the column **`artist(s)_name`** the names are separated by commas and the main artist stands at the first position, we used the `strsplit()` function with `parameter split = ","` to split the column at each comma. We then have calculated the maximum number of artists in a single cell and padded the vectors with 0 to make them the same length. Then we have converted the list to a dataframe and we have noticed that there were a space as first charachter of each features cell and the name were wrong. So , before merging them to the main dataset, we have cleaned and renamed the features columns. Finally we have merged it into our original dataframe.
-
-```{r split, warning=FALSE} 
-# Split the artist name column at each comma
-split_col <- strsplit(Spotify$artist.s._name,
-                      split = ",")
-
-
-# Get the maximum number of artists in a single cell
-max_artists <- max(sapply(split_col,
-                          length))
-
-
-# Make all the vectors the same length by padding with 0
-split_col <- lapply(split_col, function(x) { c(x,
-                                               rep(0,
-                                                   max_artists - length(x))) })
-
-
-# Convert the list to a dataframe
-split_df <- do.call(rbind,
-                    split_col)
-# Check the result
-head(split_df)
-
-# Removing the first charachter of the feautures columns
-
-
-#Name the columns # TODO : manually, as they don't stay that name after binding with original DF
-#names(split_df) <- c("Main Artist", paste0("Feat ", seq_len(max_artists - 1)))
-
-
-# Rename the columns
-
-
-# Merge into our original dataframe
-Spotify_with_splitted_artists <- cbind(Spotify,
-                                       split_df)
-
-# Write to .csv (for checking if we did it correctly)
-write.csv(Spotify_with_splitted_artists,
-          '~/Spotify_with_splitted_artists.csv',
-          row.names = FALSE)
-```
-
-# Exploratory Data Analysis (EDA)
-
-## Data Summary
-
-```{r summary}
-# Check the summary of the dataset to understand the distribution of the data
-summary(Spotify)
-```
-
-### Histograms
-
-```{r histograms}
-# Access ONLY numerical data
-numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
-
-# Drop NA if needed
-numerical_Spotify <- na.omit(numerical_Spotify)
-
-# Get number of columns
-num_of_columns <- length(names(numerical_Spotify))
-
-# Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(9, 2), 
-    mar = c(3, 3, 3, 3))
-
-# Now, create a histogram for each column
-for(col in names(numerical_Spotify)) {
-  hist(numerical_Spotify[[col]],
-       breaks = 50,
-       main = paste(col),
-       xlab = col,
-       ylab = "Frequency",
-       lwd = 0.5)
-} 
-```
-
-### Kernel Density Plots
-
-```{r density}
-
-# Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(9, 2), 
-    mar = c(3, 3, 3, 3))
-
-
-# Loop through each numerical column
-for(col in names(numerical_Spotify)) {
-  # Create a density object for the column
-  dens <- density(numerical_Spotify[[col]],
-                  na.rm = FALSE)
-  # Create a new plot
-  plot(dens, 
-       main = paste(col), 
-       xlab = col, 
-       ylab = "Density",
-       lwd = 0.5)
-  # Add a filled polygon to the plot
-  polygon(dens,
-          col = "blue",
-          border = "black")
-}
-
-```
-
-### Boxplots
-
-```{r boxplots, warning=FALSE}
-
-# Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(9, 2), 
-    mar = c(3, 3, 3, 3))
-
-# Loop through each numerical column
-for(col in names(numerical_Spotify)) {
-  # Create a boxplot for the column
-  boxplot(numerical_Spotify[[col]],
-          main = paste(col),
-          xlab = col,
-          ylab = "Value",
-          lwd = 0.5)
-}
-
-```
-
-### Pairplot
-
-```{r pairplot}
-# Create a pairplot of the numerical columns
-pairs(numerical_Spotify, 
-      lower.panel = function(x, y) { },
-      upper.panel = function(x, y) {
-        points(x, y)
-      }
-)
-```
-
-## Correlation Matrix
-
-```{r correlation}
-# Reset graphic windows
-dev.off()
-
-# Calculate the correlation matrix
-cor_matrix <- cor(numerical_Spotify) # Only use numeric data
-
-# Change the size of the plots in R
-options(repr.plot.width=640, repr.plot.height=480)
-
-# Create the correlation plot
-corrplot(cor_matrix,type = 'upper', method = "number", number.cex = 0.5)
-```
+Visual editing mode generates markdown using Pandoc, that is an open-source document converter. This means that in some cases your markdown will be rewritten to conform to standard Pandoc idioms. That is, **the Pandoc generated markdown that might differ from your own markdown writing style**.
