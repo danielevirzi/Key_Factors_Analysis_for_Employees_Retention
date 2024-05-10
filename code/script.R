@@ -40,7 +40,7 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 #    of a song ?
 # 7. How accurately can we predict an artists streams, based on the relase date
 #.   (Regression with x-axis date, y-axis Streams, then do inference)
-# 8. What about Outliers/High Leverage Points ? Do they influence regression results ?
+# 8. What about Outliers/High Leverage Points ? Do they influence regression results ? WORK IN PROGRESS
 # 9. Can we find any relationship between the key / mode of a song and its 
 #.   success in terms of streams? (Categorical Regressor key/mode)
 # 10. Dancability & Energy similar distribution --> can we find any 
@@ -458,27 +458,208 @@ top_10_artists <- top_10$Artist
 
 filtered_top_10 <- subset(Spotify_with_splitted_artists, `1` %in% top_10_artists)
 
+# Also, we only want to take the numerical data and remove all the feature informations
+filtered_top_10 <- filtered_top_10[sapply(filtered_top_10, is.numeric)]
+filtered_top_10 <- filtered_top_10[ , !(names(filtered_top_10) %in% c('2', '3', '4', '5', '6', '7', '8'))]
+  
+
+
+# Let us calculate the correlation we are interested in
+correlations_with_streams <- cor(filtered_top_10$streams, filtered_top_10[, names(numerical_Spotify) != "streams"])
+
+# Reset graphic windows
+dev.off()
+
+# Create the correlation plot
+corrplot(correlations_with_streams, method = "number", number.cex = 0.5)
+
+# We see a strong negative correlation with the year a song was released in --> people tended to listen to these 
+# artists more in earlier years ? artists became more unfamous ? we could try to make an analysis on that
+
+# but, again no real correlation seen with danceability, energy etc.
+
+
+
+#2. We will look at the top 200 songs and plot the correlation (why 200 ? roughly 200 songs when we picked the top 10 artists)
+
+# First, order by streams in descending order
+Spotify_ordered <- Spotify[order(Spotify$streams, decreasing = TRUE), ]
+
+# Pick the first 200 entries
+
+top_200_songs_by_streams <- Spotify_ordered[1:200,]
+
+# Apply filter for only numerical data
+filtered_top_200_songs_by_streams <- top_200_songs_by_streams[sapply(top_200_songs_by_streams, is.numeric)]
+
+
+
+
+# Let us calculate the correlation we are interested in
+correlations_with_streams <- cor(filtered_top_200_songs_by_streams$streams, filtered_top_200_songs_by_streams[, names(filtered_top_200_songs_by_streams) != "streams"])
+
+plot_corr(correlations_with_streams, method= 'number', number_size = 0.5)
+
+# Again, no strong correlations (we have 0.14 for acousticness atleast)
+
+
+
+
+####################################### QUESTION 8 #######################################
+#What about Outliers/High Leverage Points ? Do they influence regression results ?
+
+# As we are mostly focused on the relationship of streams and all the other
+# features, we will use streams as the dependent variable
+
+# Let us plot all the scatterplots and add regression lines
+
+# Get the column names of the independent variables (all but streams)
+independent_vars <- names(numerical_Spotify)[names(numerical_Spotify) != "streams"]
+
+# Get number of columns
+num_of_columns <- length(names(numerical_Spotify)) 
+
+# Reset graphic windows
+dev.off()
+# Set up the graphics window to have a suitable number of rows and columns
+# Increase the margins around each plot (bottom, left, top, right) using mar
+par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))), mar = c(2,2,2,2))
+
+# Create a plot for each independent variable
+for (var in independent_vars) {
+  # Create a scatterplot
+  plot(numerical_Spotify[[var]], numerical_Spotify$streams, 
+       main = paste("Scatterplot of streams vs", var),
+       xlab = var, ylab = "streams")
+  
+  # Add a regression line
+  abline(lm(numerical_Spotify$streams ~ numerical_Spotify[[var]]), col = "red")
+}
+
+
+# streams vs. in spotify charts :
+  # we have a weird high leverage point & also outlier
+  # was in the most charts, but has nearly no streams
+  # I'd say we could take that one out of the analysis
+
+  # weirdly we only see it in spotify charts , in deezer, apple etc.
+  # often more points in that 'field' or they are just a high leverage
+  # point or just an outlier
 
 
 
 
 
 
-#2. We will look at the top 25 songs and plot the correlation
+########################## QUESTION 4 #############################
+# What are the most prevelant features when it comes to estimating streams?
+# What is the best model for predicting streams ? 
+# (Multiple Linear Regression, Feature Selection)
+
+# Let us start with all the numerical features that we have as independent
+# variables and use streams as the dependent variable in the framework of
+# Multiple Linear Regression (MLR)
+
+# Get the column names of the independent variables
+independent_vars <- names(numerical_Spotify)[names(numerical_Spotify) != "streams"]
+
+# Create a formula for the regression
+# The paste function is used to create a string that contains the names of the independent variables separated by +
+# The as.formula function is used to convert this string into a formula
+
+reg_formula <- as.formula(paste("streams ~", paste(independent_vars, collapse = " + ")))
+
+# This we also used in class
+# Perform the regression
+model <- lm(reg_formula, data = numerical_Spotify)
+
+
+# Print the summary of the model
+summary(model)
+
+
+# Let us now do backward feature selection as proposed in class 
+# We will use the step function provided in R, which selects the best
+# model according to AIC
+# https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/step
+
+
+# Perform backward stepwise selection
+selected_model <- step(model, direction = "backward")
+
+# Print the summary of the selected model
+summary(selected_model)
+
+
+
+# check the residual plot
+# Reset graphic windows
+dev.off()
+plot(fitted.values(selected_model), residuals(selected_model), pch=20)
+abline(h=0)
+
+# we see an increasing trend of residuals and have no constant variance. (-> heteroscedasticity)
+# For linear regression, we use the assumption of homoscedasticity, which is not given here.
+
+#Heteroscedasticity can lead to inefficient parameter estimates,
+#though they will still be unbiased. 
+#This means that while your model estimates are on average correct,
+#they will have larger variance, leading to wider confidence intervals
+#or larger standard errors.
+
+#If you observe such a trend, you might want to explore data transformations 
+#or different modeling approaches that can handle heteroscedasticity. 
+#For instance, you could try transforming the dependent variable 
+#(e.g., using a log or square root transformation) or you could consider 
+#using weighted least squares (WLS) regression instead of ordinary least squares (OLS) 
+#regression.
+
+# Let us try some transformations to fix the heterosecadsticity problem
+##### !!! should we do that before or after feature selection ?
+# Also, I think it might not matter at all, because the residual plots look the same
+# before / after feature selection
+
+#Before Feature Selection: Transforming your variables before feature selection can be beneficial because it might help to reveal relationships between the predictors and the response that were not apparent in the untransformed variables. This could lead to a better set of features being selected. However, keep in mind that transforming your variables changes their interpretation, so the features selected on the transformed scale might not be the same as those that would be selected on the original scale.
+#After Feature Selection: If you perform feature selection first and then transform your variables, you might end up with a model that’s easier to interpret, since the features have been selected on their original scale. However, this approach might not reveal relationships that could be apparent in the transformed variables.
+
+# Log transformation (before feature selection)
+
+# use a copy we can work on
+numerical_Spotify_copy <- numerical_Spotify
+
+# Apply the log transformation to the 'streams' column
+numerical_Spotify_copy$streams <- log(numerical_Spotify_copy$streams)
+
+# log reduces a bit, sqrt doesnt really help
+
+
+# Get the column names of the independent variables
+independent_vars <- names(numerical_Spotify_copy)[names(numerical_Spotify_copy) != "streams"]
+reg_formula <- as.formula(paste("streams ~", paste(independent_vars, collapse = " + ")))
+
+# This we also used in class
+# Perform the regression
+model <- lm(reg_formula, data = numerical_Spotify_copy)
+
+# check the residual plot
+# Reset graphic windows
+dev.off()
+plot(fitted.values(model), residuals(model), pch=20)
+abline(h=0)
 
 
 
 
+################## FUNCTIONS ################## 
 
+library(corrplot)
 
-
-
-
-
-
-
-
-
+plot_corr <- function(correlation, method, number_size) {
+  # Reset graphic windows
+  dev.off()
+  # Use corrplot to create the plot
+  corrplot(correlation, method = method, number.cex = number_size)
+}
 
 
 
