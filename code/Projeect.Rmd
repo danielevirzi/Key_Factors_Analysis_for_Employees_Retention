@@ -26,7 +26,7 @@ rm(list=ls())
 script_dir <- getwd()
 ```
 
-# 1 Introduction 
+# 1 Introduction
 
 This project is a collaborative effort between three students, **Marlon Helbing**, **Daniele Virzì**, **Nemanja Ilic**. It is an academic project that will be graded based on the quality and depth of our analysis. The project aims to apply the concepts and techniques from the **Statistical Learning Course** to a real-world dataset.
 
@@ -34,16 +34,15 @@ This project is a collaborative effort between three students, **Marlon Helbing*
 
 The main objectives of this project are:
 
--  **Exploratory Data Analysis (EDA)**: We aim to uncover patterns and trends in the data that could provide insights into what makes a song popular on ***Spotify***.
+-   **Exploratory Data Analysis (EDA)**: We aim to uncover patterns and trends in the data that could provide insights into what makes a song popular on ***Spotify***.
 
--  **Regression Model**: This model aims to predict a song's popularity, in terms of streams, based on various features present in the dataset.
-
+-   **Regression Model**: This model aims to predict a song's popularity, in terms of streams, based on various features present in the dataset.
 
 ## 1.2 Methodology
 
 Our analysis will be divided into the following sections:
 
-1. **Introduction**.
+1.  **Introduction**.
 
 2.  **Data Loading**.
 
@@ -114,7 +113,6 @@ The dataset contains the following columns:
 23. **`liveness_%`**: *Presence of live performance elements*.
 
 24. **`speechiness_%`**: *Amount of spoken words in the song*.
-
 
 # 2 Data Loading
 
@@ -239,21 +237,34 @@ split_df <- do.call(rbind,
 # Check the result
 head(split_df)
 
-# Removing the first space of the column from 2 to 8
+# Removing the first space of the column from 2 to 8 if there is one
 for (i in 2:8) {
-  split_df[,i] <- substr(split_df[,i],
-                         2,
-                         nchar(split_df[,i]))
+  split_df[,i] <- gsub("^\\s+", "",
+                       split_df[,i])
 }
 
+
 # Rename the first column to Main_Artist and the other columns to Feature_1 to Feature_7
-colnames(split_df) <- c('Main_Artist',
-                        paste0('Feature_',
+colnames(split_df) <- c('main_Artist',
+                        paste0('feature_',
                                1:7))
 
 # Merge into our original dataframe
 Spotify_with_splitted_artists <- cbind(Spotify,
                                        split_df)
+
+# Make a csv file with the new dataset
+write.csv(Spotify_with_splitted_artists, "Spotify_with_splitted_artists.csv")
+
+
+```
+
+## 4.5 Encoding artist names
+
+We have noticed that the column **`main_Artist`** and **`feature_1`** to **`feature_7`** were *categorical* and we wanted to convert them into *factors* using `as.factor()`.
+
+```{r encoding}
+
 ```
 
 # 5 Exploratory Data Analysis (EDA)
