@@ -244,8 +244,8 @@ for (i in 2:8) {
 }
 
 
-# Rename the first column to Main_Artist and the other columns to Feature_1 to Feature_7
-colnames(split_df) <- c('main_Artist',
+# Rename the first column to main_artist and the other columns to feature_1 to feature_7
+colnames(split_df) <- c('main_artist',
                         paste0('feature_',
                                1:7))
 
@@ -256,7 +256,8 @@ Spotify_with_splitted_artists <- cbind(Spotify,
 # Make a csv file with the new dataset
 write.csv(Spotify_with_splitted_artists, "Spotify_with_splitted_artists.csv")
 
-
+# Check the first 5 rows of the new dataset
+head(Spotify_with_splitted_artists)
 ```
 
 ## 4.5 Encoding artist names
