@@ -27,11 +27,11 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 
 ######################################### STEP 1 QUESTIONS WE WANT TO ANSWER #########################################
 
-# 1. Which artists are the most famous ones ?
+# 1. Which artists are the most famous ones ? WORK IN PROGRESS
 # 2. Does it help more to be in a specific playlist stream-wise or are their 
 #    effect the same ?
 # 3. Is there a "mix" for the perfect song considering elements such as bpm, key
-#    energy, valence etc. ?
+#    energy, valence etc. ? WORK IN PROGRESS
 # 4. What are the most prevelant features when it comes to estimating streams 
 #.   (Multiple Linear Regression, Feature Selection)
 # 5. What Relationships can we find between features such as energy, danceability
@@ -68,7 +68,7 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 # 19. Can we accurately classify songs into high-stream and low-stream categories 
 #.    based on the given features? (Discriminant Analysis)
 # 20. Can we find a difference in the stuff like valence, danceabilty etc. for songs that were
-#.    released in summer vs winter ?
+#.    released in summer vs winter ? WORK IN PROGESS
 
 ######################################### STEP 2 DATA CLEANING & FILTERING #########################################
 
@@ -327,8 +327,9 @@ barplot(top_10$Streams, names.arg = top_10$Artist, xlab='Artists', ylab='Streams
 ####################################### QUESTION 20 #######################################
 # Can we find a difference in the stuff like valence, danceabilty etc. for songs that were released in summer vs winter ?
 
+### !!!!!! is it a problem that we may have less data for winter entries than summer entries or vice versa ??? !!!!!! ####
 
-# We will use ANOVA for this analysis
+# We will use ANOVA/Tukey for this analysis
 # In particular, we will group songs by summer & winter time and check danceability & energy. 
 # Our hypothesis is that in summer time, songs will have more danceability & energy percentages
 # To put it in a statistical framework, we will compare the mean of the two groups (summer & winter)
@@ -363,9 +364,9 @@ boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA R
 
 
 
-# So we do TukeyHSD to perform between classes :
+# So we do Tukey to perform between classes :
 
-result_tuskey <- TukeyHSD(result)
+result_tuskey <- TukeyHSD(result_anova)
 
 print(result_tuskey)
 
@@ -374,6 +375,18 @@ print(result_tuskey)
 # In the ANOVA plot, we can see that the mean energy for summer is higher than for 
 # winter ; just what we expected !
 
+
+# Let us try for danceability
+
+result_anova <- aov(Spotify$danceability_. ~ Spotify$time_of_year, data = Spotify)
+# Reset graphic windows
+dev.off()
+boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Danceability")
+result_tuskey <- TukeyHSD(result)
+
+print(result_tuskey)
+
+# Again, we get similar results, as expected !
 
 
 
@@ -406,6 +419,52 @@ grouped_time_of_year <- merge(grouped_time_of_year_and_danceability, grouped_tim
 ######################## DONT NEED THIS FOR THIS QUESTION ########################
 
 
+
+
+
+
+####################################### QUESTION 3 #######################################
+# Is there a "mix" for the perfect song considering elements such as bpm, key
+# energy, valence etc. ?
+
+
+# For this question, we will look at the most successful songs (in terms of streams)
+# and will see if we can find any pattern
+
+# For this, let us check the correlation plots of streams with all other numerical features
+
+# Let us calculate the correlation we are interested in
+correlations_with_streams <- cor(numerical_Spotify$streams, numerical_Spotify[, names(numerical_Spotify) != "streams"])
+
+# Reset graphic windows
+dev.off()
+
+# Create the correlation plot
+corrplot(correlations_with_streams, method = "number", number.cex = 0.5)
+
+# Here, we do not see any pattern but that a lot of streams correlates with being in playlists
+# and charts, which was more or less obvious to us already
+
+# Now let us look at 2 different aspects
+
+# 1. We will look at the top 10 artists, gather all their songs (where they are a main artists)
+# and plot the correlation
+
+# Create a vector of the top 10 artists
+
+top_10_artists <- top_10$Artist
+
+# Filter the dataframe given the artists
+
+filtered_top_10 <- subset(Spotify_with_splitted_artists, `1` %in% top_10_artists)
+
+
+
+
+
+
+
+#2. We will look at the top 25 songs and plot the correlation
 
 
 
