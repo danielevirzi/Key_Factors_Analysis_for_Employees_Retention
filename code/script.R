@@ -2,27 +2,11 @@
 # We set it via relative paths such that we can work on the same code without 
 # the need to change it all the time
 
-
 # Clear current working environment
 rm(list=ls())
-
 # Get the directory of the current script
 script_dir <- getwd()
-
 Spotify <- read.csv("./data/spotify-2023.csv")
-
-
-
-
-
-
-
-
-#attach(Spotify) # s.t. we can use the column names directly
-
-#detach(Spotify) # In case we want to load data new, always detach first
-
-#plot(in_apple_charts, streams, pch=20) # pch --> chooses the point shape
 
 
 ######################################### STEP 1 QUESTIONS WE WANT TO ANSWER #########################################
@@ -70,6 +54,64 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 # 20. Can we find a difference in the stuff like valence, danceabilty etc. for songs that were
 #.    released in summer vs winter ? WORK IN PROGESS
 
+
+################## LIBRARIES ##################
+library(corrplot)
+
+
+################## FUNCTIONS ################## 
+
+# REMOVE PLOTS
+shutoff_plots <- function() {
+  # Reset graphic windows
+  if (!is.null(dev.list())) {
+    dev.off()
+  }
+}
+
+
+# MULTIPLE PLOTS 
+setup_multiple_plots <- function(dataframe) {
+  # Get number of columns
+  num_of_columns <- length(names(dataframe))
+  # Set up sizes
+  par(mar=c(2,2,2,2))
+  # Set up the graphics window to have a suitable number of rows and columns
+  par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))))
+  
+}
+
+# FOR PAIRS PLOTS (from Lecture)
+## panel.hist function
+## puts histograms on the diagonal
+
+panel.hist <- function(x, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h <- hist(x, plot = FALSE)
+  breaks <- h$breaks; nB <- length(breaks)
+  y <- h$counts; y <- y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+
+## panel.cor function
+## put (absolute) correlations on the upper panels,
+## with size proportional to the correlations.
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r <- abs(cor(x, y))
+  txt <- format(c(r, 0.123456789), digits = digits)[1]
+  txt <- paste0(prefix, txt)
+  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+
+
 ######################################### STEP 2 DATA CLEANING & FILTERING #########################################
 
 ##### OVERVIEW OF DATA ######
@@ -79,7 +121,7 @@ summary(Spotify)
 
 ##### HANDLE MISSING DATA ######
 
-# Approach : Remove all rows where there is atleast one missing value in some column
+# Approach : Remove all rows where there is at least one missing value in some column
 Spotify <- na.omit(Spotify)
 
 
@@ -87,14 +129,11 @@ Spotify <- na.omit(Spotify)
 
 # Check how many duplicates there are in the dataset
 duplicates <- sum(duplicated(Spotify))
-
 # Remove all duplicates from the dataset
 Spotify <- unique(Spotify)
 
 
 ##### DATA INTO THE RIGHT FORMATS #####
-
-
 
 
 ### CATEGORICAL COLUMNS ###
@@ -110,9 +149,7 @@ Spotify$in_deezer_playlists <- as.integer(Spotify$in_deezer_playlists)
 Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
 
 
-
-
-# Drop NA's again
+# Drop created NA's by coercion
 Spotify <- na.omit(Spotify)
 
 
@@ -172,47 +209,31 @@ numerical_Spotify <- na.omit(numerical_Spotify)
 
 ##### CORRELATION MATRIX #####
 
-library(corrplot)
+shutoff_plots()
 
-# Reset graphic windows
-dev.off()
-
-
+# Calculate correlation matrix
 cor_matrix <- cor(numerical_Spotify) # Only use numeric data
-
-
-# Change the size of the plots in R
-options(repr.plot.width=640, repr.plot.height=480)
-
 # Create the correlation plot
 corrplot(cor_matrix,type = 'upper', method = "number", number.cex = 0.5)
 
 
 
+
 ##### HISTOGRAMS #####
-# Reset graphic windows
-dev.off()
 
+shutoff_plots()
+setup_multiple_plots(numerical_Spotify)
 
-# Get number of columns
-num_of_columns <- length(names(numerical_Spotify))
-# Check for plot.new() : figure margins too large error
-par("mar")
-# Set new
-par(mar=c(1,1,1,1))
-# Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))))
 # Now, create a histogram for each column
 for(col in names(numerical_Spotify)) {
   hist(numerical_Spotify[[col]], breaks = 50, main = paste("Histogram of", col), xlab = col)
 }
 
 ##### KERNEL DENSITY GRAPHS #####
-# Reset graphic windows
-dev.off()
-par(mar=c(1,1,1,1))
-# Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))))
+
+shutoff_plots()
+setup_multiple_plots(numerical_Spotify)
+
 # Loop through each numerical column
 for(col in names(numerical_Spotify)) {
   # Create a density object for the column
@@ -225,62 +246,17 @@ for(col in names(numerical_Spotify)) {
 
 
 ##### PAIR GRAPHS #####
-# Reset graphic windows
-dev.off()
-par(mar=c(1,1,1,1))
 
-####### Define functions (given in LectureCodeR) #######
-
-
-## panel.hist function
-## puts histograms on the diagonal
-
-panel.hist <- function(x, ...)
-{
-  usr <- par("usr"); on.exit(par(usr))
-  par(usr = c(usr[1:2], 0, 1.5) )
-  h <- hist(x, plot = FALSE)
-  breaks <- h$breaks; nB <- length(breaks)
-  y <- h$counts; y <- y/max(y)
-  rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
-}
-
-## panel.cor function
-## put (absolute) correlations on the upper panels,
-## with size proportional to the correlations.
-
-panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
-{
-  usr <- par("usr"); on.exit(par(usr))
-  par(usr = c(0, 1, 0, 1))
-  r <- abs(cor(x, y))
-  txt <- format(c(r, 0.123456789), digits = digits)[1]
-  txt <- paste0(prefix, txt)
-  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
-  text(0.5, 0.5, txt, cex = cex.cor * r)
-}
-
-
-####### Define functions (given in LectureCodeR) #######
+shutoff_plots()
+setup_multiple_plots(numerical_Spotify)
 
 pairs(numerical_Spotify, diag.panel=panel.hist, upper.panel=panel.cor, lower.panel=panel.smooth)
-
-
-
-# COMMENT : Artist count useless, no correlation information
-
-
 
 
 ####################################### QUESTION 1 #######################################
 # First we will do a ranking of all the main artists, i.e. not the features
 # and group their streams to do a ranking of how popular they are (in terms of 
 # streams)
-
-
-
-# Get all the main artists
-
 
 
 # Create an empty list to store the stream sums
@@ -320,6 +296,9 @@ colnames(grouped_main_artists) <- c("Artist", "Streams", 'Energy')
 # Select the top 10 artists
 top_10 <- grouped_main_artists[1:10, ]
 
+
+shutoff_plots()
+
 barplot(top_10$Streams, names.arg = top_10$Artist, xlab='Artists', ylab='Streams')
 
 
@@ -354,9 +333,7 @@ result_anova <- aov(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify)
 summary(result_anova)
 
 
-# Reset graphic windows
-dev.off()
-#par(mar=c(1,1,1,1))
+shutoff_plots()
 
 # Plot the ANOVA result
 boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Energy")
@@ -379,48 +356,15 @@ print(result_tuskey)
 # Let us try for danceability
 
 result_anova <- aov(Spotify$danceability_. ~ Spotify$time_of_year, data = Spotify)
-# Reset graphic windows
-dev.off()
+
+shutoff_plots()
+
 boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Danceability")
 result_tuskey <- TukeyHSD(result)
 
 print(result_tuskey)
 
 # Again, we get similar results, as expected !
-
-
-
-
-######################## DONT NEED THIS FOR THIS QUESTION ########################
-# Now, we group after the times of the year 
-
-danceability_per_time_of_year <- list()
-energy_per_time_of_year <- list()
-
-group_by_time_of_year <- split(Spotify, Spotify$time_of_year)
-
-for(i in 1:length(group_by_time_of_year)) {
-
-  mean_value_danceability <- mean(group_by_time_of_year[[i]]$danceability_., na.rm = TRUE)
-  mean_value_energy <- mean(group_by_time_of_year[[i]]$energy_., na.rm = TRUE)
-  
-  danceability_per_time_of_year[[i]] <- data.frame(group_column = names(group_by_time_of_year)[i], mean = mean_value_danceability)
-  energy_per_time_of_year[[i]] <- data.frame(group_column = names(group_by_time_of_year)[i], mean = mean_value_energy)
-}
-
-
-# Combine all the dataframes 
-
-grouped_time_of_year_and_danceability <- do.call(rbind, danceability_per_time_of_year)
-grouped_time_of_year_and_energy <- do.call(rbind, energy_per_time_of_year)
-
-grouped_time_of_year <- merge(grouped_time_of_year_and_danceability, grouped_time_of_year_and_energy, by = 'group_column')
-
-######################## DONT NEED THIS FOR THIS QUESTION ########################
-
-
-
-
 
 
 ####################################### QUESTION 3 #######################################
@@ -436,8 +380,7 @@ grouped_time_of_year <- merge(grouped_time_of_year_and_danceability, grouped_tim
 # Let us calculate the correlation we are interested in
 correlations_with_streams <- cor(numerical_Spotify$streams, numerical_Spotify[, names(numerical_Spotify) != "streams"])
 
-# Reset graphic windows
-dev.off()
+shutoff_plots()
 
 # Create the correlation plot
 corrplot(correlations_with_streams, method = "number", number.cex = 0.5)
@@ -467,8 +410,7 @@ filtered_top_10 <- filtered_top_10[ , !(names(filtered_top_10) %in% c('2', '3', 
 # Let us calculate the correlation we are interested in
 correlations_with_streams <- cor(filtered_top_10$streams, filtered_top_10[, names(numerical_Spotify) != "streams"])
 
-# Reset graphic windows
-dev.off()
+shutoff_plots()
 
 # Create the correlation plot
 corrplot(correlations_with_streams, method = "number", number.cex = 0.5)
@@ -498,10 +440,11 @@ filtered_top_200_songs_by_streams <- top_200_songs_by_streams[sapply(top_200_son
 # Let us calculate the correlation we are interested in
 correlations_with_streams <- cor(filtered_top_200_songs_by_streams$streams, filtered_top_200_songs_by_streams[, names(filtered_top_200_songs_by_streams) != "streams"])
 
-plot_corr(correlations_with_streams, method= 'number', number_size = 0.5)
+shutoff_plots()
+
+corrplot(correlations_with_streams, method= 'number', number.cex = 0.5)
 
 # Again, no strong correlations (we have 0.14 for acousticness atleast)
-
 
 
 
@@ -513,17 +456,13 @@ plot_corr(correlations_with_streams, method= 'number', number_size = 0.5)
 
 # Let us plot all the scatterplots and add regression lines
 
+shutoff_plots()
+setup_multiple_plots(numerical_Spotify)
+
 # Get the column names of the independent variables (all but streams)
 independent_vars <- names(numerical_Spotify)[names(numerical_Spotify) != "streams"]
 
-# Get number of columns
-num_of_columns <- length(names(numerical_Spotify)) 
 
-# Reset graphic windows
-dev.off()
-# Set up the graphics window to have a suitable number of rows and columns
-# Increase the margins around each plot (bottom, left, top, right) using mar
-par(mfrow = c(ceiling(sqrt(num_of_columns)), ceiling(sqrt(num_of_columns))), mar = c(2,2,2,2))
 
 # Create a plot for each independent variable
 for (var in independent_vars) {
@@ -545,8 +484,6 @@ for (var in independent_vars) {
   # weirdly we only see it in spotify charts , in deezer, apple etc.
   # often more points in that 'field' or they are just a high leverage
   # point or just an outlier
-
-
 
 
 
@@ -593,8 +530,8 @@ summary(selected_model)
 
 
 # check the residual plot
-# Reset graphic windows
-dev.off()
+
+shutoff_plots()
 plot(fitted.values(selected_model), residuals(selected_model), pch=20)
 abline(h=0)
 
@@ -642,24 +579,16 @@ reg_formula <- as.formula(paste("streams ~", paste(independent_vars, collapse = 
 model <- lm(reg_formula, data = numerical_Spotify_copy)
 
 # check the residual plot
-# Reset graphic windows
-dev.off()
+shutoff_plots()
 plot(fitted.values(model), residuals(model), pch=20)
 abline(h=0)
 
 
 
 
-################## FUNCTIONS ################## 
 
-library(corrplot)
 
-plot_corr <- function(correlation, method, number_size) {
-  # Reset graphic windows
-  dev.off()
-  # Use corrplot to create the plot
-  corrplot(correlation, method = method, number.cex = number_size)
-}
+
 
 
 
