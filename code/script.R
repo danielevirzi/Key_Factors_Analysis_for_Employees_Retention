@@ -17,7 +17,7 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 # 3. Is there a "mix" for the perfect song considering elements such as bpm, key
 #    energy, valence etc. ? WORK IN PROGRESS
 # 4. What are the most prevelant features when it comes to estimating streams 
-#.   (Multiple Linear Regression, Feature Selection)
+#.   (Multiple Linear Regression, Feature Selection) WORK IN PROGRESS
 # 5. What Relationships can we find between features such as energy, danceability
 #.   etc. ? Meaning, does one imply the other? (Partly Feature Selection)
 # 6. Does the artist count in a song have any impact whatsoever on the success
@@ -57,7 +57,8 @@ Spotify <- read.csv("./data/spotify-2023.csv")
 
 ################## LIBRARIES ##################
 library(corrplot)
-
+library(MASS)
+library(pROC)
 
 ################## FUNCTIONS ################## 
 
@@ -303,68 +304,6 @@ barplot(top_10$Streams, names.arg = top_10$Artist, xlab='Artists', ylab='Streams
 
 
 
-####################################### QUESTION 20 #######################################
-# Can we find a difference in the stuff like valence, danceabilty etc. for songs that were released in summer vs winter ?
-
-### !!!!!! is it a problem that we may have less data for winter entries than summer entries or vice versa ??? !!!!!! ####
-
-# We will use ANOVA/Tukey for this analysis
-# In particular, we will group songs by summer & winter time and check danceability & energy. 
-# Our hypothesis is that in summer time, songs will have more danceability & energy percentages
-# To put it in a statistical framework, we will compare the mean of the two groups (summer & winter)
-# with respect to A. danceability and B. energy.
-
-# We define "summer time" as the duration from may-august (5-8)
-# We define "winter time" as the duration from october-january (10-12 % 1)
-
-# Add a new column to the Spotify dataframe which contains the summer/winter information
-# Other months will be just called "other"
-Spotify$time_of_year <- ifelse(Spotify_dates$released_month %in% c(5, 6, 7, 8), "summer",
-                               ifelse(Spotify_dates$released_month %in% c(10, 11, 12, 1), "winter", "other")) 
-
-
-
-
-
-# Perform the ANOVA test ; Problem here : we perform between summer & winter & other !!!!
-result_anova <- aov(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify)
-
-# Print the summary of the ANOVA test
-summary(result_anova)
-
-
-shutoff_plots()
-
-# Plot the ANOVA result
-boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Energy")
-
-
-
-
-# So we do Tukey to perform between classes :
-
-result_tuskey <- TukeyHSD(result_anova)
-
-print(result_tuskey)
-
-# and see p value 0.036 between winter & summer --> we reject H0 and say that there
-# is a significant difference, as we assumed ! 
-# In the ANOVA plot, we can see that the mean energy for summer is higher than for 
-# winter ; just what we expected !
-
-
-# Let us try for danceability
-
-result_anova <- aov(Spotify$danceability_. ~ Spotify$time_of_year, data = Spotify)
-
-shutoff_plots()
-
-boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Danceability")
-result_tuskey <- TukeyHSD(result)
-
-print(result_tuskey)
-
-# Again, we get similar results, as expected !
 
 
 ####################################### QUESTION 3 #######################################
@@ -445,46 +384,6 @@ shutoff_plots()
 corrplot(correlations_with_streams, method= 'number', number.cex = 0.5)
 
 # Again, no strong correlations (we have 0.14 for acousticness atleast)
-
-
-
-####################################### QUESTION 8 #######################################
-#What about Outliers/High Leverage Points ? Do they influence regression results ?
-
-# As we are mostly focused on the relationship of streams and all the other
-# features, we will use streams as the dependent variable
-
-# Let us plot all the scatterplots and add regression lines
-
-shutoff_plots()
-setup_multiple_plots(numerical_Spotify)
-
-# Get the column names of the independent variables (all but streams)
-independent_vars <- names(numerical_Spotify)[names(numerical_Spotify) != "streams"]
-
-
-
-# Create a plot for each independent variable
-for (var in independent_vars) {
-  # Create a scatterplot
-  plot(numerical_Spotify[[var]], numerical_Spotify$streams, 
-       main = paste("Scatterplot of streams vs", var),
-       xlab = var, ylab = "streams")
-  
-  # Add a regression line
-  abline(lm(numerical_Spotify$streams ~ numerical_Spotify[[var]]), col = "red")
-}
-
-
-# streams vs. in spotify charts :
-  # we have a weird high leverage point & also outlier
-  # was in the most charts, but has nearly no streams
-  # I'd say we could take that one out of the analysis
-
-  # weirdly we only see it in spotify charts , in deezer, apple etc.
-  # often more points in that 'field' or they are just a high leverage
-  # point or just an outlier
-
 
 
 
@@ -585,6 +484,240 @@ abline(h=0)
 
 
 
+####################################### QUESTION 8 #######################################
+#What about Outliers/High Leverage Points ? Do they influence regression results ?
+
+# As we are mostly focused on the relationship of streams and all the other
+# features, we will use streams as the dependent variable
+
+# Let us plot all the scatterplots and add regression lines
+
+shutoff_plots()
+setup_multiple_plots(numerical_Spotify)
+
+# Get the column names of the independent variables (all but streams)
+independent_vars <- names(numerical_Spotify)[names(numerical_Spotify) != "streams"]
+
+
+
+# Create a plot for each independent variable
+for (var in independent_vars) {
+  # Create a scatterplot
+  plot(numerical_Spotify[[var]], numerical_Spotify$streams, 
+       main = paste("Scatterplot of streams vs", var),
+       xlab = var, ylab = "streams")
+  
+  # Add a regression line
+  abline(lm(numerical_Spotify$streams ~ numerical_Spotify[[var]]), col = "red")
+}
+
+
+# streams vs. in spotify charts :
+  # we have a weird high leverage point & also outlier
+  # was in the most charts, but has nearly no streams
+  # I'd say we could take that one out of the analysis
+
+  # weirdly we only see it in spotify charts , in deezer, apple etc.
+  # often more points in that 'field' or they are just a high leverage
+  # point or just an outlier
+
+
+
+####################################### QUESTION 19 #######################################
+# 19. Can we accurately classify songs into high-stream and low-stream categories 
+#.    based on the given features? (Discriminant Analysis)
+
+
+
+# Make a copy of the numerical_Spotify dataframe that we will work on
+
+numerical_Spotify_copy <- numerical_Spotify
+
+
+# Remove artist count
+numerical_Spotify_copy$artist_count <- NULL
+
+# LDA assumes predictor variables to have the same scale. Therefore we scale all predictors
+# mean 0, variance 1
+numerical_Spotify_copy <- scale(numerical_Spotify_copy)
+
+# Convert back to dataframe
+numerical_Spotify_copy <- as.data.frame(numerical_Spotify_copy)
+
+# Now create a new column 'stream_classification' which separates into 'high_streams' and 'low_streams'
+
+numerical_Spotify_copy$stream_category <- ifelse(numerical_Spotify_copy$streams >= 0, 'high_streams', 'low_streams')
+
+
+# Split the dataset for train and testing
+
+#make this example reproducible
+set.seed(1)
+#Use 70% of dataset as training set and remaining 30% as testing set
+sample <- sample(c(TRUE, FALSE), nrow(numerical_Spotify_copy), replace=TRUE, prob=c(0.7,0.3))
+train <- numerical_Spotify_copy[sample, ]
+test <- numerical_Spotify_copy[!sample, ]
+
+#fit LDA model
+model <- lda(stream_category~., data=train)
+plot(model, type = 'density')
+
+
+model_test <- lda(stream_category~., data=test)
+plot(model_test, type = 'density')
+
+predictions <- predict(model, test)
+probabilities <- predict(model, test)$posterior
+
+# Our accuracy
+accuracy <- sum(predictions$class == test$stream_category) / nrow(test)
+print(paste('Accuracy:', accuracy))
+
+# We get a really good accuracy!
+# Lets check also the confusion matrix and ROC curve
+
+conf.matrix <- table(predictions$class, test$stream_category)
+
+# rearrange rows and columns to match
+# the confusion matrix on the slides
+# and add margins
+# predicted on left , # actual on top
+conf.matrix <- conf.matrix[2:1, 2:1]
+conf.matrix <- addmargins(conf.matrix, margin = c(1, 2))
+conf.matrix
+
+
+# Function to compute performance measures
+#
+# Arguments:
+#
+# pred.values = vector of predicted values
+# true.values = vector of true values
+# lab.pos     = label of the positive class
+#
+perf.measure <- function(true.values, pred.values,  lab.pos = 1){
+  #
+  # compute the confusion matrix and number of units
+  conf.matrix <- table(pred.values, true.values)
+  n <- sum(conf.matrix)
+  #
+  # force the label of positives to be a character string
+  lab.pos <- as.character(lab.pos)
+  #
+  # obtain the label of negatives
+  lab <- rownames(conf.matrix)
+  lab.neg <- lab[lab != lab.pos]
+  #
+  # extract relevant quantities from the confusion matrix
+  TP <- conf.matrix[lab.pos, lab.pos]
+  TN <- conf.matrix[lab.neg, lab.neg]
+  FP <- conf.matrix[lab.pos, lab.neg]
+  FN <- conf.matrix[lab.neg, lab.pos]
+  P     <- TP + FN
+  N     <- FP + TN
+  P.ast <- TP + FP
+  #
+  # compute the performance measures
+  OER <- (FP+FN)/n
+  PPV <- TP/P.ast
+  TPR <- TP/P
+  F1  <- 2*PPV*TPR/(PPV+TPR)
+  TNR <- TN/N
+  FPR <- FP/N
+  return(list(overall.ER = OER, PPV=PPV, TPR=TPR, F1=F1, TNR=TNR, FPR=FPR))
+}
+
+PM <- perf.measure(test$stream_category, predictions$class,  lab.pos="low_streams")
+PM
+
+
+# If labels are "0" and "1" then "0"=negative and "1"=positive
+# levels = negative (0's) as first element and positive (1's) as second
+
+roc.out <- roc(test$stream_category, probabilities[, "low_streams"])
+
+
+
+# different ways of plotting the ROC curve
+plot(roc.out) # check values on the x axis
+
+# legacy.axes=TRUE   1 - specificity on the x axis
+plot(roc.out, legacy.axes=TRUE)
+
+
+# compute AUC = Area Under the Curve
+plot(roc.out,  print.auc=TRUE, legacy.axes=TRUE, xlab="False Positive Rate", ylab="True Positive Rate")
+auc(roc.out)
+
+# threshold that maximizes the sum of specificity (TNR) and sensitivity (TPR)
+coords(roc.out, "best")
+
+
+
+
+
+####################################### QUESTION 20 #######################################
+# Can we find a difference in the stuff like valence, danceabilty etc. for songs that were released in summer vs winter ?
+
+### !!!!!! is it a problem that we may have less data for winter entries than summer entries or vice versa ??? !!!!!! ####
+
+# We will use ANOVA/Tukey for this analysis
+# In particular, we will group songs by summer & winter time and check danceability & energy. 
+# Our hypothesis is that in summer time, songs will have more danceability & energy percentages
+# To put it in a statistical framework, we will compare the mean of the two groups (summer & winter)
+# with respect to A. danceability and B. energy.
+
+# We define "summer time" as the duration from may-august (5-8)
+# We define "winter time" as the duration from october-january (10-12 % 1)
+
+# Add a new column to the Spotify dataframe which contains the summer/winter information
+# Other months will be just called "other"
+Spotify$time_of_year <- ifelse(Spotify_dates$released_month %in% c(5, 6, 7, 8), "summer",
+                               ifelse(Spotify_dates$released_month %in% c(10, 11, 12, 1), "winter", "other")) 
+
+
+
+
+
+# Perform the ANOVA test ; Problem here : we perform between summer & winter & other !!!!
+result_anova <- aov(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify)
+
+# Print the summary of the ANOVA test
+summary(result_anova)
+
+
+shutoff_plots()
+
+# Plot the ANOVA result
+boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Energy")
+
+
+
+
+# So we do Tukey to perform between classes :
+
+result_tuskey <- TukeyHSD(result_anova)
+
+print(result_tuskey)
+
+# and see p value 0.036 between winter & summer --> we reject H0 and say that there
+# is a significant difference, as we assumed ! 
+# In the ANOVA plot, we can see that the mean energy for summer is higher than for 
+# winter ; just what we expected !
+
+
+# Let us try for danceability
+
+result_anova <- aov(Spotify$danceability_. ~ Spotify$time_of_year, data = Spotify)
+
+shutoff_plots()
+
+boxplot(Spotify$energy_. ~ Spotify$time_of_year, data = Spotify, main = "ANOVA Results", xlab = "Time of Year", ylab = "Danceability")
+result_tuskey <- TukeyHSD(result)
+
+print(result_tuskey)
+
+# Again, we get similar results, as expected !
 
 
 
