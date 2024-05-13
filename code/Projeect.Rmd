@@ -182,7 +182,8 @@ Spotify$released_date <- paste(Spotify$released_year,
                                sep = '-')
 
 # We give it the wanted datatype of DATE
-Spotify$released_date <- as.Date(Spotify$released_date, format = "%Y-%m-%d")
+Spotify$released_date <- as.Date(Spotify$released_date, 
+                                 format = "%Y-%m-%d")
 
 # We can directly drop our other 3 columns storing the dates
 Spotify <- subset(Spotify, select = -c(released_year,
@@ -217,7 +218,8 @@ We also wanted to split the column **`artist(s)_name`** into more columns. One c
 
 ```{r split}
 # Split the artist name column at each comma
-split_col <- strsplit(Spotify$artist.s._name, split = ",")
+split_col <- strsplit(Spotify$artist.s._name,
+                      split = ",")
 
 # Get the maximum number of artists in a single cell
 max_artists <- max(sapply(split_col, length))
