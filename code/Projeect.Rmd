@@ -140,7 +140,7 @@ In this section, we had performed some data cleaning tasks to ensure that the da
 
 ## 3.1 Checking the structure of the data
 
-```{r explore}
+```{r explore, results='hide'}
 # Check the first 5 rows of the dataset to understand the structure of the data
 head(Spotify)
 ```
@@ -216,39 +216,47 @@ Spotify$in_shazam_charts <- as.integer(Spotify$in_shazam_charts)
 
 We also wanted to split the column **`artist(s)_name`** into more columns. One containing the main artist and the other containing the features of the song. Since in the column **`artist(s)_name`** the names are separated by commas and the main artist stands at the first position, we used the `strsplit()` function with `parameter split = ","` to split the column at each comma. We then have calculated the maximum number of artists in a single cell and padded the vectors with 0 to make them the same length. Then we have converted the list to a dataframe and we have noticed that there were a space as first charachter of each features cell and the name were wrong. So , before merging them to the main dataset, we have cleaned and renamed the features columns. Finally we have merged it into our original dataframe.
 
-```{r split}
+```{r split, results='hide'}
 # Split the artist name column at each comma
 split_col <- strsplit(Spotify$artist.s._name,
                       split = ",")
 
 # Get the maximum number of artists in a single cell
-max_artists <- max(sapply(split_col, length))
+max_artists <- max(sapply(split_col,
+                          length))
 
 # Make all the vectors the same length by padding with 0
 split_col <- lapply(split_col, function(x) { c(x,
-                                               rep(0, max_artists - length(x))) })
+                                               rep(0,
+                                                   max_artists - length(x))) })
 
 # Convert the list to a dataframe
-split_df <- do.call(rbind, split_col)
+split_df <- do.call(rbind,
+                    split_col)
 
 # Check the result
 head(split_df)
 
 # Removing the first space of the column from 2 to 8 if there is one
 for (i in 2:8) {
-  split_df[,i] <- gsub("^\\s+", "", split_df[,i])
+  split_df[,i] <- gsub("^\\s+",
+                       "",
+                       split_df[,i])
 }
 
 
 # Rename the first column to main_artist and the other columns to feature_1 to feature_7
 colnames(split_df) <- c('main_artist',
-                        paste0('feature_', 1:7))
+                        paste0('feature_',
+                               1:7))
 
 # Merge into our original dataframe
-spotify_with_splitted_artists <- cbind(Spotify, split_df)
+spotify_with_splitted_artists <- cbind(Spotify,
+                                       split_df)
 
 # Make a csv file with the new dataset
-write.csv(spotify_with_splitted_artists, "spotify_with_splitted_artists.csv")
+write.csv(spotify_with_splitted_artists,
+          "spotify_with_splitted_artists.csv")
 
 # Check the first 5 rows of the new dataset
 head(spotify_with_splitted_artists)
@@ -258,7 +266,7 @@ head(spotify_with_splitted_artists)
 
 ## 5.1 Data Summary
 
-```{r summary}
+```{r summary, results='hide'}
 # Check the summary of the dataset to understand the distribution of the data
 summary(Spotify)
 ```
@@ -267,7 +275,8 @@ summary(Spotify)
 
 ```{r histograms and density}
 # Access ONLY numerical data
-numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
+numerical_Spotify <- Spotify[sapply(Spotify,
+                                    is.numeric)]
 
 # Drop NA if needed
 numerical_Spotify <- na.omit(numerical_Spotify)
@@ -292,10 +301,13 @@ for(col in names(numerical_Spotify)) {
        col = "lightblue")  
 
   # Compute density data
-  density_data <- density(numerical_Spotify[[col]], na.rm = TRUE)
+  density_data <- density(numerical_Spotify[[col]],
+                          na.rm = TRUE)
 
   # Add a kernel density plot (smoothed version of the histogram)
-  lines(density_data, col = "darkblue", lwd = 2)
+  lines(density_data,
+        col = "darkblue",
+        lwd = 2)
 }
 
 ```
@@ -335,6 +347,8 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
   r <- cor(x, y)
   txt <- format(c(abs(r), 0.123456789), digits = digits)[1]
   txt <- paste0(prefix, txt)
+  
+  # Set the size of the text
   if(missing(cex.cor)) cex.cor <- 1.0/strwidth(txt)
   
   # Use color to indicate the sign of the correlation
