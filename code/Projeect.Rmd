@@ -182,8 +182,7 @@ Spotify$released_date <- paste(Spotify$released_year,
                                sep = '-')
 
 # We give it the wanted datatype of DATE
-Spotify$released_date <- as.Date(Spotify$released_date,
-                                 format = "%Y-%m-%d")
+Spotify$released_date <- as.Date(Spotify$released_date, format = "%Y-%m-%d")
 
 # We can directly drop our other 3 columns storing the dates
 Spotify <- subset(Spotify, select = -c(released_year,
@@ -218,36 +217,30 @@ We also wanted to split the column **`artist(s)_name`** into more columns. One c
 
 ```{r split}
 # Split the artist name column at each comma
-split_col <- strsplit(Spotify$artist.s._name,
-                      split = ",")
+split_col <- strsplit(Spotify$artist.s._name, split = ",")
 
 # Get the maximum number of artists in a single cell
-max_artists <- max(sapply(split_col,
-                          length))
+max_artists <- max(sapply(split_col, length))
 
 # Make all the vectors the same length by padding with 0
 split_col <- lapply(split_col, function(x) { c(x,
-                                               rep(0,
-                                                   max_artists - length(x))) })
+                                               rep(0, max_artists - length(x))) })
 
 # Convert the list to a dataframe
-split_df <- do.call(rbind,
-                    split_col)
+split_df <- do.call(rbind, split_col)
 
 # Check the result
 head(split_df)
 
 # Removing the first space of the column from 2 to 8 if there is one
 for (i in 2:8) {
-  split_df[,i] <- gsub("^\\s+", "",
-                       split_df[,i])
+  split_df[,i] <- gsub("^\\s+", "", split_df[,i])
 }
 
 
 # Rename the first column to main_artist and the other columns to feature_1 to feature_7
 colnames(split_df) <- c('main_artist',
-                        paste0('feature_',
-                               1:7))
+                        paste0('feature_', 1:7))
 
 # Merge into our original dataframe
 spotify_with_splitted_artists <- cbind(Spotify, split_df)
@@ -274,6 +267,9 @@ summary(Spotify)
 # Access ONLY numerical data
 numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
 
+# Drop NA if needed
+numerical_Spotify <- na.omit(numerical_Spotify)
+
 # Get number of columns
 num_of_columns <- length(names(numerical_Spotify))
 
@@ -283,10 +279,10 @@ par(mfrow = c(9, 2),
 
 # Now, create a histogram and a density plot for each column
 for(col in names(numerical_Spotify)) {
-  # Create a histogram with probability densities instead of counts on the y-axis
+  # Create a histogram with probability densities 
   hist(numerical_Spotify[[col]],
        breaks = 50,
-       prob = TRUE,  # Show densities instead of counts
+       prob = TRUE,
        main = paste(col),
        xlab = col,
        ylab = "Density",
@@ -317,13 +313,15 @@ for(col in names(numerical_Spotify)) {
           xlab = col,
           ylab = "Value",
           lwd = 0.5,
+          col = "lightblue",
+          border = "darkblue",
           cex.main = 2)
 }
 ```
 
 ### 5.1.3 Pairplot
 
-```{r pairplot, fig.width=15, fig.height=20}
+```{r pairplot, fig.width=16, fig.height=20}
 # Set up the graphics window
 par(mar=c(1,1,1,1))
 
