@@ -172,7 +172,7 @@ str(Spotify)
 
 ## 4.1 Convert into date datatype
 
-We had the date of release given in three different columns (day,month,year) as strings and we wanted to change this into one column and save it as datatype date. Typical format for date is '*2022-06-22*'. As a way to achieve this result, we used `paste()`with the parameter `sep = '-'` to aggregate the three columns into a new column , and then we converted the column datatype using `as.Date()` with parameter `format = "%Y-%m-%d"`. We dropped the original three columns since they were no longer relevant.
+We had the date of release given in three different columns (day,month,year) as *characters* and we wanted to change this into one column and save it as datatype *date*. Typical format for date is '*2022-06-22*'. As a way to achieve this result, we used `paste()`with the parameter `sep = '-'` to aggregate the three columns into a new column , and then we converted the column datatype using `as.Date()` with parameter `format = "%Y-%m-%d"`. We dropped the original three columns since they were no longer relevant.
 
 ```{r date}
 # First we create a new column and store the date in the wanted format 
@@ -193,7 +193,7 @@ Spotify <- subset(Spotify, select = -c(released_year,
 
 ## 4.2 Convert into factor datatype
 
-We have noticed that tha columns **`key`** and **`mode`** were *categorical* and we wanted to convert them into *factors* using `as.factor()`*.*
+We have noticed that tha columns **`key`** and **`mode`** were *characters* and we wanted to convert them into *factors* using `as.factor()`*.*
 
 ```{r factor}
 # Change columns with categorical values into the right format (i.e. factor)
@@ -203,7 +203,7 @@ Spotify$mode <- as.factor(Spotify$mode)
 
 ## 4.3 Convert into integer datatype
 
-Moreover, the columns **`streams`**, **`in_deezer_playlists`**, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *categorical* so we have converted them into *integer* using `as.integer()`.
+Moreover, the columns **`streams`**, **`in_deezer_playlists`**, and **`in_shazam_charts`** , unlike the other playlists and charts features, were *characters* so we have converted them into *integers* using `as.integer()`.
 
 ```{r integer}
 # Change columns with categorical values into the right format (i.e. integer)
@@ -250,22 +250,13 @@ colnames(split_df) <- c('main_artist',
                                1:7))
 
 # Merge into our original dataframe
-spotify_with_splitted_artists <- cbind(Spotify,
-                                       split_df)
+spotify_with_splitted_artists <- cbind(Spotify, split_df)
 
 # Make a csv file with the new dataset
 write.csv(spotify_with_splitted_artists, "spotify_with_splitted_artists.csv")
 
 # Check the first 5 rows of the new dataset
 head(spotify_with_splitted_artists)
-```
-
-## 4.5 Encoding artist names
-
-We have noticed that the column **`main_Artist`** and **`feature_1`** to **`feature_7`** were *categorical* and we wanted to convert them into *factors* using `as.factor()`.
-
-```{r encoding}
-
 ```
 
 # 5 Exploratory Data Analysis (EDA)
@@ -277,14 +268,11 @@ We have noticed that the column **`main_Artist`** and **`feature_1`** to **`feat
 summary(Spotify)
 ```
 
-### 5.1.1 Histograms
+### 5.1.1 Histograms and Kernel Density
 
-```{r histograms}
+```{r histograms and density}
 # Access ONLY numerical data
 numerical_Spotify <- Spotify[sapply(Spotify, is.numeric)]
-
-# Drop NA if needed
-numerical_Spotify <- na.omit(numerical_Spotify)
 
 # Get number of columns
 num_of_columns <- length(names(numerical_Spotify))
@@ -293,47 +281,32 @@ num_of_columns <- length(names(numerical_Spotify))
 par(mfrow = c(9, 2), 
     mar = c(3, 3, 3, 3))
 
-# Now, create a histogram for each column
+# Now, create a histogram and a density plot for each column
 for(col in names(numerical_Spotify)) {
+  # Create a histogram with probability densities instead of counts on the y-axis
   hist(numerical_Spotify[[col]],
        breaks = 50,
+       prob = TRUE,  # Show densities instead of counts
        main = paste(col),
        xlab = col,
-       ylab = "Frequency",
-       lwd = 0.5)
-} 
-```
-
-### 5.1.2 Kernel Density Plots
-
-```{r density}
-# Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(9, 2), 
-    mar = c(3, 3, 3, 3))
-
-# Loop through each numerical column
-for(col in names(numerical_Spotify)) {
-  # Create a density object for the column
-  dens <- density(numerical_Spotify[[col]],
-                  na.rm = FALSE)
-  # Create a new plot
-  plot(dens, 
-       main = paste(col), 
-       xlab = col, 
        ylab = "Density",
-       lwd = 0.5)
-  # Add a filled polygon to the plot
-  polygon(dens,
-          col = "blue",
-          border = "black")
+       lwd = 0.5,
+       col = "lightblue")  
+
+  # Compute density data
+  density_data <- density(numerical_Spotify[[col]], na.rm = TRUE)
+
+  # Add a kernel density plot (smoothed version of the histogram)
+  lines(density_data, col = "darkblue", lwd = 2)
 }
+
 ```
 
-### 5.1.3 Boxplots
+### 5.1.2 Boxplots
 
-```{r boxplots}
+```{r boxplots, fig.width=20, fig.height=10}
 # Set up the graphics window to have a suitable number of rows and columns
-par(mfrow = c(9, 2), 
+par(mfrow = c(3, 6), 
     mar = c(3, 3, 3, 3))
 
 # Loop through each numerical column
@@ -343,11 +316,12 @@ for(col in names(numerical_Spotify)) {
           main = paste(col),
           xlab = col,
           ylab = "Value",
-          lwd = 0.5)
+          lwd = 0.5,
+          cex.main = 2)
 }
 ```
 
-### 5.1.4 Pairplot
+### 5.1.3 Pairplot
 
 ```{r pairplot, fig.width=15, fig.height=20}
 # Set up the graphics window
