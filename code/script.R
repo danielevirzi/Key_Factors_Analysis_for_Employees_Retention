@@ -804,10 +804,65 @@ hist(Streams_normalized, breaks = 50, main = "Histogram", xlab = "Values", col =
 
 
 
-########################## MAYBE ##################################
+########################## SEASONS TEST ON LM OF STREAMS ##################################
+
+Spotify_with_splitted_artists$released_month = as.character(Spotify_with_splitted_artists$released_month)
+month_rel = lm(streams ~ released_month, data = Spotify_with_splitted_artists)
+summary(month_rel)
+
+
+Spotify$time_of_year <- ifelse(Spotify_dates$released_month %in% c(5, 6, 7, 8), "summer",
+                               ifelse(Spotify_dates$released_month %in% c(11, 12, 1, 2), "winter", "other")) 
+
+
+summerbad <- lm(in_spotify_charts ~ time_of_year, data = Spotify)
+table(Spotify$time_of_year)
+summary(summerbad)
+
+
+########################## WIP (lm on songs properties) ##################################
+
+
+general_lm <- lm(in_spotify_charts ~ bpm + danceability_. + valence_. + energy_. + acousticness_. +
+                   instrumentalness_. + liveness_. + speechiness_., data = Spotify)
+summary(general_lm)
+
+general_good <- stepAIC(general_lm, direction = "both")
+summary(general_good)
+
+table(Spotify$in_spotify_charts)
+
+##########################CREATE RESPONSE VARIABLE#####################################
+
+#Spotify$in_apple_charts[Spotify$in_apple_charts == 0] <- max(Spotify$in_apple_charts) + 1
+
+
+mean_ignore_zeros <- function(x) {
+  non_zero_values <- x[x != 0]
+  if (length(non_zero_values) == 0) {
+    return(NA)  # Return NA if all values are zero
+  } else {
+    return(mean(non_zero_values))
+  }
+}
+
+Spotify$charts <- apply(Spotify[, c("in_apple_charts", "in_deezer_charts", "in_spotify_charts", "in_shazam_charts")], 1, mean_ignore_zeros)
+
+sum(is.na(Spotify$charts))
+
+Spotify <- Spotify[!is.na(Spotify$charts), ]
+
+############TESTS
+summerbad <- lm(charts ~ time_of_year, data = Spotify)
+table(Spotify$time_of_year)
+summary(summerbad) #worse performance than in_spotify_charts
 
 
 
-
+general_lm <- lm(charts ~ bpm + danceability_. + valence_. + energy_. + acousticness_. +
+                   instrumentalness_. + liveness_. + speechiness_., data = Spotify)
+summary(general_lm)
+general_good <- stepAIC(general_lm, direction = "both")
+summary(general_good) #better
 
 
