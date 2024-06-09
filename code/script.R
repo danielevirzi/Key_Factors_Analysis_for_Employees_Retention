@@ -823,12 +823,20 @@ summary(summerbad)
 ########################## WIP (lm on songs properties) ##################################
 
 
-general_lm <- lm(in_spotify_charts ~ bpm + danceability_. + valence_. + energy_. + acousticness_. +
+general_lm <- glm(in_spotify_charts ~ bpm + danceability_. + valence_. + energy_. + acousticness_. +
                    instrumentalness_. + liveness_. + speechiness_., data = Spotify)
+
+general_lm
+
 summary(general_lm)
 
+
 general_good <- stepAIC(general_lm, direction = "both")
-summary(general_good)
+summary_general_good <- summary(general_good)
+
+rsq <- 1 - (summary_general_good$deviance / summary_general_good$null.deviance)
+
+print(paste("McFadden's R-squared: ", rsq))
 
 table(Spotify$in_spotify_charts)
 
