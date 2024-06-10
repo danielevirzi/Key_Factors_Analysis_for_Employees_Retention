@@ -17,7 +17,7 @@ library(pROC) # For ROC curve
 library(car) # For vif
 library(faraway) # For ANCOVA
 library(e1071)
-library(class)
+library(class) # for K-Nearest Neighbors (KNN)
 library(boot)
 library(gRbase)
 library(leaps)
@@ -130,13 +130,14 @@ str(data)
 ##### CONVERT CATEGORICAL VARIABLES TO FACTORS ######
 
 # Convert categorical variables to factors
-data$Attrition <- as.factor(data$Attrition)
-data$Gender <- as.factor(data$Gender)
-data$BusinessTravel <- as.factor(data$BusinessTravel)
-data$JobRole <- as.factor(data$JobRole)
-data$Department <- as.factor(data$Department)
-data$EducationField <- as.factor(data$EducationField)
-data$MaritalStatus <- as.factor(data$MaritalStatus)
+data$Attrition <- factor(data$Attrition)
+data$Gender <- factor(data$Gender)
+data$BusinessTravel <- factor(data$BusinessTravel)
+data$JobRole <- factor(data$JobRole)
+data$Department <- factor(data$Department)
+data$EducationField <- factor(data$EducationField)
+data$MaritalStatus <- factor(data$MaritalStatus)
+data$StockOptionLevel <- factor(data$StockOptionLevel)
 
 # One-hot encoding of categorical variables
 #data <- one_hot_encoding(data, "JobRole")
@@ -231,15 +232,18 @@ summary(model_lr)
 
 
 
-# MODEL 1 FINAL 
+# MODEL 1 YEARS AT COMPANY    ####### FINISHED #######
 # this is using no one-hot encoding, just all variables as categorical ones bc. the model autmatically
 # selects categorical ones if needed
 
-# Fit the multiple linear regression model
+# Fit the multiple linear regression model using all variables on the target variable YearsAtCompany
 model <- lm(YearsAtCompany ~ ., data = data)
 
 # Summarize the model
 summary(model)
+
+# Plot the model
+plot(model, which = 1)
 
 # First, we will check for multicollinearity
 vif_values <- vif(model)
@@ -254,6 +258,7 @@ data_reduced <- data[, !names(data) %in% columns_to_remove]
 
 # Refit the model
 model <- lm(YearsAtCompany ~ ., data = data_reduced)
+summary(model)
 
 # See that it worked 
 vif_values <- vif(model)
@@ -267,16 +272,16 @@ plot(model, which = 1)
 # doing a log-transform (I tried this and it works nicely, but does it make sense?)
 
 # Apply a log transformation to the response variable
-data_reduced$log_YearsAtCompany <- log(data_reduced$YearsAtCompany + 1)  # Add 1 to avoid log(0)
+#data_reduced$log_YearsAtCompany <- log(data_reduced$YearsAtCompany + 1)  # Add 1 to avoid log(0)
 
 # Fit the model with the transformed response variable
-model_log <- lm(log_YearsAtCompany ~ ., data = data_reduced)
+#model_log <- lm(log_YearsAtCompany ~ ., data = data_reduced)
 
 # Summary of the transformed model
-summary(model_log)
+#summary(model_log)
 
 # Plot Residuals vs Fitted for the transformed model
-plot(model_log, which = 1)
+#plot(model_log, which = 1)
 
 # Now we see the non-linear pattern way better !
 # It look a lot like a polynomial regression, so we try this as a model now
@@ -284,17 +289,17 @@ plot(model_log, which = 1)
 # Create a function to generate polynomial terms
 generate_poly_formula <- function(data, degree = 2) {
   predictors <- colnames(data)
-  predictors <- predictors[!predictors %in% c("log_YearsAtCompany")]  # Exclude the response variable
+  predictors <- predictors[!predictors %in% c("YearsAtCompany")]  # Exclude the response variable
   
   # Create polynomial terms for each predictor
   poly_terms <- sapply(predictors, function(x) paste0("poly(", x, ", ", degree, ", raw = TRUE)"))
-  formula <- paste("log_YearsAtCompany ~", paste(poly_terms, collapse = " + "))
+  formula <- paste("YearsAtCompany ~", paste(poly_terms, collapse = " + "))
   
   return(as.formula(formula))
 }
 
 # Apply the function to create the polynomial formula
-poly_formula <- generate_poly_formula(data_reduced, degree = 2)
+poly_formula <- generate_poly_formula(data_reduced[], degree = 2)
 
 # Print the polynomial formula
 print(poly_formula)
@@ -317,6 +322,7 @@ summary(backward_model)
 
 # Plot Residuals vs Fitted for the transformed model
 plot(backward_model, which = 1)
+plot(backward_model, which = 2)
 
 
 # Use Cook’s distance or leverage values to identify influential points.
@@ -326,44 +332,66 @@ cooksd <- cooks.distance(backward_model)
 
 # Plot Cook's distance
 plot(cooksd, pch = "*", cex = 2, main = "Cook's Distance")
-abline(h = 4/(nrow(data_reduced) - length(backward_model$coefficients)), col = "red")  # Add a cutoff line
+abline(h = 4/(nrow(data_reduced) - length(backward_model$coefficients)), col = "blue")  # Add a cutoff line
+# 3 times the mean Cook's distance is a common threshold for identifying influential points
+abline(h = 3 *mean(cooksd, na.rm=TRUE),  col = "green")
 
-# Identify the points with high Cook's distance
+# Identify the points with high Cook's distance 
 influential <- which(cooksd > 4/(nrow(data_reduced) - length(model_poly$coefficients)))
 print(influential)
+print(length(influential))
+
+# Boxplot of Data Reduced
+boxplot(data_reduced)
+
+# Boxplot of influential points
+boxplot(data_reduced[influential, ])
+
+# Put the plot as a side-by-side comparison
+par(mfrow = c(1, 2))
+boxplot(data_reduced)
+boxplot(data_reduced[influential, ])
+
+
+
+
 
 # Optionally, remove influential points and refit the model
 data_reduced_clean <- data_reduced[-influential, ]
 backward_model_clean <- lm(poly_formula, data = data_reduced_clean)
 summary(backward_model_clean)
 
+# Step direction both
+backward_model_both <- step(model_poly, direction = "both")
+summary(backward_model_both)
+
 # Check residual diagnostics for the new model
 par(mfrow = c(2, 2))
 plot(backward_model_clean)
 
+# Final model
+final_model1 <- lm(YearsAtCompany 
+                   ~ poly(Age, 2, raw = TRUE) +
+                     #Attrition +
+                     poly(Education, 2, raw = TRUE) +
+                     Gender +
+                     #MonthlyIncome^2 +
+                     poly(NumCompaniesWorked , 2, raw = TRUE) +
+                     #poly(PercentSalaryHike, 2, raw = TRUE) +
+                     #poly(StockOptionLevel, 2, raw = TRUE) +
+                     TotalWorkingYears +
+                     poly(TrainingTimesLastYear, 2, raw = TRUE) +
+                     poly(YearsSinceLastPromotion, 2, raw = TRUE) +
+                     YearsWithCurrManager +
+                     poly(JobSatisfaction, 2, raw = TRUE),
+                     
+                   data = data_reduced_clean)
 
+summary(final_model1)
 
-
-
-
-
-
-
-# Let us check some more plots : 
-
-# Normal Q-Q plot
-plot(model, which = 2)
-
-# Scale-Location plot
-plot(model, which = 3)
-
-# Residuals vs Leverage plot
-plot(model, which = 5)
-
-
-
-
-
+# Check residual diagnostics for the new model
+par(mfrow = c(2, 2))
+plot(final_model1)
 
 
 
