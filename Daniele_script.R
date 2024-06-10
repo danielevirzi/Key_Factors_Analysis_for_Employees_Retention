@@ -11,7 +11,7 @@ employee_survey_data <- read.csv("./data/employee_survey_data.csv")
 
 ################## LIBRARIES ##################
 library(corrplot) # For plotting correlation matrix
-library(MASS) # For stepAIC, glm, lda, qda
+library(MASS) # For step, glm, lda, qda
 library(pROC) # For ROC curve
 #library(ISLR2) For dataset so useless
 library(car) # For vif
@@ -175,78 +175,38 @@ corrplot(correlation_matrix, method = "color", type = "upper", tl.cex = 0.7)
 
 ######################################### STEP 4 MODELING #########################################
 
-#### Model 1: Simple Linear Regression
+######### LINEAR REGRESSION FOR YEARS AT COMPANY #########
 
-# Fit linear regression model for TotalWorkingYears using Age
-model_slr <- lm(TotalWorkingYears ~ Age, data = data)
+
+### SIMPLE LINEAR REGRESSION ###
+
+# Simple linear regression model using YearsWithCurrManager on YearsAtCompany
+model_slr <- lm(YearsAtCompany ~ YearsWithCurrManager, data = data)
 summary(model_slr)
 
-# Plot the linear regression model
-plot(data$Age, data$MonthlyIncome, xlab = "Age", ylab = "Total Working Years", main = "Total Working Years vs Age")
+# Plot the model
+par(mfrow = c(2, 2))
+plot(model_slr)
+
+# Scatter plot of YearsAtCompany vs YearsWithCurrManager
+plot(data$YearsWithCurrManager, data$YearsAtCompany, xlab = "YearsWithCurrManager", ylab = "YearsAtCompany")
+# Regression line
 abline(model_slr, col = "red")
 
-#### Model 2: Polynomial Regression
 
-# Fit polynomial regression model for TotalWorkingYears using Age (Grade 2)
-model_pr2 <- lm(TotalWorkingYears ~ poly(Age, 2, raw = TRUE), data = data)
-summary(model_pr2)
-
-# Fit polynomial regression model for TotalWorkingYears using Age (Grade 3)
-model_pr3 <- lm(TotalWorkingYears ~ poly(Age, 3, raw = TRUE), data = data)
-summary(model_pr3)
-
-# Fit polynomial regression model for TotalWorkingYears using Age (Grade 5)
-model_pr5 <- lm(TotalWorkingYears ~ poly(Age, 5, raw = TRUE), data = data)
-summary(model_pr5)
-
-# Fit polynomial regression model for TotalWorkingYears using Age (Grade 10)
-model_pr10 <- lm(TotalWorkingYears ~ poly(Age, 10, raw = TRUE), data = data)
-summary(model_pr10)
-
-#### Model 3: Log-Linear Regression
-
-# Fit log-linear regression model for TotalWorkingYears using Age
-#model_llr <- lm(log(TotalWorkingYears) ~ Age, data = data)
-#summary(model_llr)
-
-#### Model 4: Multiple Linear Regression
-
-# Fit linear regression model for TotalWorkingYears using all numeric variables
-model_mlr <- lm(TotalWorkingYears ~ ., data = data)
-summary(model_mlr)
-
-#### Model 5: Ridge Regression
-
-# Fit ridge regression model for TotalWorkingYears using all numeric variables
-model_rr <- glmnet(as.matrix(data[, !(names(data) %in% c("TotalWorkingYears"))]), data$TotalWorkingYears, alpha = 0)
-summary(model_rr)
-
-#### Model 6: Lasso Regression
-
-# Fit lasso regression model for TotalWorkingYears using all numeric variables
-model_lr <- glmnet(as.matrix(data[, !(names(data) %in% c("TotalWorkingYears"))]), data$TotalWorkingYears, alpha = 1)
-summary(model_lr)
-
-
-
-
-
-
-# MODEL 1 YEARS AT COMPANY    ####### FINISHED #######
-# this is using no one-hot encoding, just all variables as categorical ones bc. the model autmatically
-# selects categorical ones if needed
+### MULTIPLE LINEAR REGRESSION ###
 
 # Fit the multiple linear regression model using all variables on the target variable YearsAtCompany
-model <- lm(YearsAtCompany ~ ., data = data)
+model_mlr1 <- lm(YearsAtCompany ~ ., data = data)
 
 # Summarize the model
-summary(model)
+summary(model_mlr1)
 
 # Plot the model
-plot(model, which = 1)
+plot(model_mlr1, which = 1)
 
 # First, we will check for multicollinearity
-vif_values <- vif(model)
+vif_values <- vif(model_mlr1)
 print(vif_values)
 
 # We consider VIF values over 3 high. Thus, we want to remove them.
@@ -257,17 +217,17 @@ columns_to_remove <- c("Department", "EducationField")
 data_reduced <- data[, !names(data) %in% columns_to_remove]
 
 # Refit the model
-model <- lm(YearsAtCompany ~ ., data = data_reduced)
-summary(model)
+model_mlr2 <- lm(YearsAtCompany ~ ., data = data_reduced)
+summary(model_mlr2)
 
 # See that it worked 
-vif_values <- vif(model)
+vif_values <- vif(model_mlr2)
 print(vif_values)
 
 # DIAGNOSTIC CHECKS
 
 # Residual vs Fitted plot
-plot(model, which = 1)
+plot(model_mlr2, which = 1)
 # We see a non-linear relationship ! Let us try to make it more clear by 
 # doing a log-transform (I tried this and it works nicely, but does it make sense?)
 
@@ -285,6 +245,8 @@ plot(model, which = 1)
 
 # Now we see the non-linear pattern way better !
 # It look a lot like a polynomial regression, so we try this as a model now
+
+### POLYNOMIAL REGRESSION ###
 
 # Create a function to generate polynomial terms
 generate_poly_formula <- function(data, degree = 2) {
@@ -325,6 +287,35 @@ plot(backward_model, which = 1)
 plot(backward_model, which = 2)
 
 
+### FEATURE SELECTION ###
+
+# Model with the best set of features 
+best_model <- lm(YearsAtCompany 
+                  
+                  ~ poly(Age, 2, raw = TRUE) +
+                    poly(Education, 2, raw = TRUE) +
+                    Gender +
+                    poly(NumCompaniesWorked , 2, raw = TRUE) +
+                    TotalWorkingYears +
+                    poly(TrainingTimesLastYear, 2, raw = TRUE) +
+                    poly(YearsSinceLastPromotion, 2, raw = TRUE) +
+                    YearsWithCurrManager +
+                    poly(JobSatisfaction, 2, raw = TRUE),
+                  
+                  data = data_reduced)
+
+summary(best_model)
+
+# Check residual diagnostics for the new model
+par(mfrow = c(2, 2))
+plot(best_model)
+
+
+
+
+
+### COOK'S DISTANCE ###
+
 # Use Cook’s distance or leverage values to identify influential points.
 
 # Calculate Cook's distance
@@ -341,44 +332,22 @@ influential <- which(cooksd > 4/(nrow(data_reduced) - length(model_poly$coeffici
 print(influential)
 print(length(influential))
 
-# Boxplot of Data Reduced
-boxplot(data_reduced)
-
-# Boxplot of influential points
-boxplot(data_reduced[influential, ])
-
 # Put the plot as a side-by-side comparison
 par(mfrow = c(1, 2))
 boxplot(data_reduced)
 boxplot(data_reduced[influential, ])
 
 
-
-
-
 # Optionally, remove influential points and refit the model
 data_reduced_clean <- data_reduced[-influential, ]
-backward_model_clean <- lm(poly_formula, data = data_reduced_clean)
-summary(backward_model_clean)
 
-# Step direction both
-backward_model_both <- step(model_poly, direction = "both")
-summary(backward_model_both)
-
-# Check residual diagnostics for the new model
-par(mfrow = c(2, 2))
-plot(backward_model_clean)
-
-# Final model
-final_model1 <- lm(YearsAtCompany 
+# Final model 
+final_model <- lm(YearsAtCompany 
+                   
                    ~ poly(Age, 2, raw = TRUE) +
-                     #Attrition +
                      poly(Education, 2, raw = TRUE) +
                      Gender +
-                     #MonthlyIncome^2 +
                      poly(NumCompaniesWorked , 2, raw = TRUE) +
-                     #poly(PercentSalaryHike, 2, raw = TRUE) +
-                     #poly(StockOptionLevel, 2, raw = TRUE) +
                      TotalWorkingYears +
                      poly(TrainingTimesLastYear, 2, raw = TRUE) +
                      poly(YearsSinceLastPromotion, 2, raw = TRUE) +
@@ -387,16 +356,25 @@ final_model1 <- lm(YearsAtCompany
                      
                    data = data_reduced_clean)
 
-summary(final_model1)
+summary(final_model)
 
 # Check residual diagnostics for the new model
 par(mfrow = c(2, 2))
-plot(final_model1)
+plot(final_model)
+
+### EVALUATION ###
+
+# Make predictions using the final model
+predictions <- predict(final_model, newdata = data_reduced_clean)
+
+# Calculate the RMSE
+rmse <- sqrt(mean((data_reduced_clean$YearsAtCompany - predictions)^2))
+print(rmse)
 
 
 
 
-
+sdfhodshfodshfsdfdsif
 
 
 
