@@ -60,6 +60,8 @@ panel.hist <- function(x, ...)
   rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
 }
 
+
+
 ## panel.cor function
 ## put (absolute) correlations on the upper panels,
 ## with size proportional to the correlations.
@@ -138,7 +140,11 @@ data$Department <- factor(data$Department)
 data$EducationField <- factor(data$EducationField)
 data$MaritalStatus <- factor(data$MaritalStatus)
 data$StockOptionLevel <- factor(data$StockOptionLevel)
-
+data$Education <- factor(data$Education)
+data$JobLevel <- factor(data$JobLevel)
+data$EnvironmentSatisfaction <- factor(data$EnvironmentSatisfaction)
+data$JobSatisfaction <- factor(data$JobSatisfaction)
+data$WorkLifeBalance <- factor(data$WorkLifeBalance)
 # One-hot encoding of categorical variables
 #data <- one_hot_encoding(data, "JobRole")
 #data <- one_hot_encoding(data, "Department")
@@ -160,6 +166,139 @@ str(data)
 
 ######################################### STEP 3 EXPLORATORY DATA ANALYSIS #########################################
 
+# In our project we are interested in
+# Attrition (To model on which grounds people stayed or left their job)
+# Years at the Company (To model which factors were deceicive of people staying longer or shorter in the company)
+
+
+##### ATTRITION ANALYSIS ######
+
+# Distribution 
+attrition_distribution <- table(data$Attrition)
+print(attrition_distribution)
+
+# Plot the bar plot
+barplot(attrition_distribution,
+        main = "Distribution of Attrition",
+        xlab = "Attrition Categories",
+        ylab = "Frequency",
+        col = "skyblue",
+        border = "white",
+        las = 2) # las = 2 for vertical labels
+
+# Our data is unbalanced, but we have many samples
+
+# Boxplots with attrition as references for all numerical data
+
+par(mfrow=c(2,5),mar=c(2,1.85,2.5,0))
+boxplot(Age~Attrition,data=data,main="Age",col=c(4,6))
+boxplot(DistanceFromHome~Attrition,data=data,main="DisFromHome",col=c(4,6))
+boxplot(MonthlyIncome~Attrition,data=data,main="Income",col=c(4,6))
+boxplot(NumCompaniesWorked~Attrition,data=data,main="CompWorked",col=c(4,6))
+boxplot(PercentSalaryHike~Attrition,data=data,main="PSalaryHike",col=c(4,6))
+boxplot(TotalWorkingYears~Attrition,data=data,main="WorkingYears",col=c(4,6))
+boxplot(TrainingTimesLastYear~Attrition,data=data,main="TrainingTime",col=c(4,6))
+boxplot(YearsAtCompany~Attrition,data=data,main="YearsCompany",col=c(4,6))
+boxplot(YearsSinceLastPromotion~Attrition,data=data,main="YearSinceProm",col=c(4,6))
+boxplot(YearsWithCurrManager~Attrition,data=data,main="YearsManager",col=c(4,6))
+
+
+
+##### YEARS AT COMPANY ANALYSIS ######
+
+# Distribution of YearsAtCompany
+
+shutoff_plots()
+hist(data$YearsAtCompany,
+     main = "Distribution of Years at Company",
+     xlab = "Years at Company",
+     col = "skyblue",
+     border = "white",
+     breaks = 20) # Adjust the number of breaks as needed
+
+# Boxplots with years at company as references for all categorical data
+shutoff_plots()
+par(mfrow = c(3, 5), mar = c(10, 4, 4, 2) + 0.1, cex.axis = 0.8, cex.lab = 0.8, las = 2)
+
+# Function to add rotated x-axis labels with vertical adjustment
+add_rotated_labels <- function(labels, vertical_adjustment = 1) {
+  text(x = seq_along(labels), y = par("usr")[3] - vertical_adjustment, srt = 45, adj = 1, labels = labels, xpd = TRUE, cex = 0.8)
+}
+
+boxplot(YearsAtCompany ~ Attrition, data = data, main = "Attrition", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$Attrition))
+
+boxplot(YearsAtCompany ~ BusinessTravel, data = data, main = "Business Travel", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$BusinessTravel))
+
+boxplot(YearsAtCompany ~ Department, data = data, main = "Department", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$Department))
+
+boxplot(YearsAtCompany ~ Education, data = data, main = "Education", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$Education))
+
+boxplot(YearsAtCompany ~ EducationField, data = data, main = "Education Field", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$EducationField))
+
+boxplot(YearsAtCompany ~ Gender, data = data, main = "Gender", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$Gender))
+
+boxplot(YearsAtCompany ~ JobLevel, data = data, main = "Job Level", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$JobLevel))
+
+boxplot(YearsAtCompany ~ JobRole, data = data, main = "Job Role", col = c(4, 6), xaxt = "n", xlab = "") 
+add_rotated_labels(levels(data$JobRole))
+
+boxplot(YearsAtCompany ~ MaritalStatus, data = data, main = "Marital Status", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$MaritalStatus))
+
+boxplot(YearsAtCompany ~ StockOptionLevel, data = data, main = "Stock Option Level", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$StockOptionLevel))
+
+boxplot(YearsAtCompany ~ EnvironmentSatisfaction, data = data, main = "Env. Satisfaction", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$EnvironmentSatisfaction))
+
+boxplot(YearsAtCompany ~ JobSatisfaction, data = data, main = "Job Satisfaction", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$JobSatisfaction))
+
+boxplot(YearsAtCompany ~ WorkLifeBalance, data = data, main = "Work-Life Balance", col = c(4, 6), xaxt = "n", xlab = "")
+add_rotated_labels(levels(data$WorkLifeBalance))
+
+
+# BASIC ANALYSIS OF CATEGORICAL VARIABLES
+# TODO : some labels not showing, but I did not manage to implement the rorate thing here for some reason
+shutoff_plots()
+par(mfrow=c(4,3), mar=c(4.5,4.5,1.6,1))
+plot(data$EnvironmentSatisfaction,col=c(2:5),main="EnvironmentSatisfaction" )
+plot(data$JobSatisfaction,col=c(2:5),main="JobSatisfaction")
+plot(data$WorkLifeBalance,col=c(2:5),main="WorkLifeBalance")
+plot(data$BusinessTravel,col=c(2:4),main="BusinessTravel")
+plot(data$Department,col=c(2:4),main="Department")
+plot(data$Education,col=c(2:6),main="Education")
+plot(data$EducationField,col=c(2:6),main="EducationField" )
+plot(data$Gender,col=c(2:3),main="Gender")
+plot(data$JobLevel,col=c(2:6),main="JobLevel")
+plot(data$JobRole,col=c(2:10),main="JobRole")
+plot(data$MaritalStatus,col=c(2:4),main="MaritalStatus")
+plot(data$StockOptionLevel,col=c(2:6),main="StockOptionLevel")
+
+# We note that JobSatisfaction and EnvironmentSatisfaction are extremely similar.
+# In fact, let us calculate the chi squared statistic between these two
+
+# 
+contingency_table <- table(data$EnvironmentSatisfaction, data$JobSatisfaction)
+
+chi_squared <- chisq.test(contingency_table) # I guess we did smth like this in stat 1 ?
+# Print the correlation coefficient
+print(chi_squared)
+
+# p-value of 0.08 , do we keep or remove ?
+# As Job Satisfaction includes Environment Satisfaction, we could remove env satis
+
+
+
+
+
 ##### CORRELATION MATRIX ######
 
 shutoff_plots()     
@@ -172,6 +311,14 @@ correlation_matrix <- cor(numeric_data)
 
 # Plot correlation matrix bigger
 corrplot(correlation_matrix, method = "color", type = "upper", tl.cex = 0.7)
+
+
+
+
+
+
+
+
 
 ######################################### STEP 4 MODELING #########################################
 
@@ -271,7 +418,6 @@ model_poly <- lm(poly_formula, data = data_reduced)
 
 summary(model_poly)
 
-# We get an R-squared score of 0.95 ! This is very good, but we have to be careful with overfitting
 
 
 # Next, we do feature selection, since we still have many features and a lot of them are not significant
@@ -374,7 +520,9 @@ print(rmse)
 
 
 
-sdfhodshfodshfsdfdsif
+
+
+
 
 
 
