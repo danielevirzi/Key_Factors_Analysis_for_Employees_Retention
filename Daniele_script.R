@@ -371,13 +371,28 @@ corrplot(correlation_matrix, method = "color", type = "upper", tl.cex = 0.7)
 
 ######################################### STEP 4 MODELING #########################################
 
+set.seed(123)
+
+n <- dim(data)[1]
+
+test <- sample(1:n, n*0.2) # indexes of data in the validation set
+train <- setdiff(1:n, test) # indexes of data in training set
+
+test.data <- data[test, ] # validation set
+train.data <- data[train, ] # training set
+
+
+length(test.data[1])
+length(train.data[1])
+
+
 ######### LINEAR REGRESSION FOR YEARS AT COMPANY #########
 
 
 ### SIMPLE LINEAR REGRESSION ###
 
 # Simple linear regression model using YearsWithCurrManager on YearsAtCompany
-model_slr <- lm(YearsAtCompany ~ YearsWithCurrManager, data = data)
+model_slr <- lm(YearsAtCompany ~ YearsWithCurrManager, data = train.data)
 summary(model_slr)
 
 # Plot the model
@@ -386,7 +401,7 @@ plot(model_slr)
 
 par(mfrow = c(1, 1))
 # Scatter plot of YearsAtCompany vs YearsWithCurrManager
-plot(data$YearsWithCurrManager, data$YearsAtCompany, xlab = "YearsWithCurrManager", ylab = "YearsAtCompany")
+plot(train.data$YearsWithCurrManager, train.data$YearsAtCompany, xlab = "YearsWithCurrManager", ylab = "YearsAtCompany")
 # Regression line
 abline(model_slr, col = "red", lwd = 3)
 
@@ -394,7 +409,7 @@ abline(model_slr, col = "red", lwd = 3)
 ### MULTIPLE LINEAR REGRESSION ###
 
 # Fit the multiple linear regression model using all variables on the target variable YearsAtCompany
-model_mlr1 <- lm(YearsAtCompany ~ ., data = data)
+model_mlr1 <- lm(YearsAtCompany ~ ., data = train.data)
 
 # Summarize the model
 summary(model_mlr1)
@@ -411,7 +426,7 @@ print(vif_values)
 
 columns_to_remove <- c("Department", "EducationField")
 
-data_reduced <- data[, !names(data) %in% columns_to_remove]
+data_reduced <- train.data[, !names(data) %in% columns_to_remove]
 
 # Refit the model
 model_mlr2 <- lm(YearsAtCompany ~ ., data = data_reduced)
@@ -562,12 +577,6 @@ plot(final_model)
 
 ### EVALUATION ###
 
-# Make predictions using the final model
-predictions <- predict(final_model, newdata = data_reduced_clean)
-
-# Calculate the RMSE
-rmse <- sqrt(mean((data_reduced_clean$YearsAtCompany - predictions)^2))
-print(rmse)
 
 
 
