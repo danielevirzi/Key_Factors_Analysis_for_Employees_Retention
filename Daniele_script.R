@@ -427,6 +427,8 @@ print(vif_values)
 columns_to_remove <- c("Department", "EducationField")
 
 data_reduced <- train.data[, !names(data) %in% columns_to_remove]
+# We also need to remove them in test # TODO : do we need this ? 
+data_reduced_test <- test.data[, !names(data) %in% columns_to_remove]
 
 # Refit the model
 model_mlr2 <- lm(YearsAtCompany ~ ., data = data_reduced)
@@ -575,243 +577,107 @@ summary(final_model)
 par(mfrow = c(2, 2))
 plot(final_model)
 
+
+# Let us see the effect of lasso regression instead of feature selection,
+# as it pushes values to 0 (effectively doing feature selection)
+
+# Prepare the data
+x_train <- model.matrix(poly_formula, data = data_reduced_clean)[,-1] # Use data where we removed outliers ; but use the poly_model (last model before we applied feature selection)
+
+
+y_train <- data_reduced_clean$YearsAtCompany 
+
+# Fit Lasso regression model (alpha = 1) 
+lasso_model <- cv.glmnet(x_train, y_train, alpha = 1)
+
+
+
+
+
+
+
+
+
+
 ### EVALUATION ###
 
 
-
-
-
-
-
-
-
-
-
-################################# OLD STUFF #################################
-###### MODEL 1 : SIMPLE LINEAR REGRESSION ######
-# Linear regression for years at company 
-# We first start off with a multiple linear regression of years at company to all other variables
-
-
-# Fit the multiple linear regression model
-model <- lm(YearsAtCompany ~ ., data = data)
-
-# Summarize the model
-summary(model)
-
-# The first thing we notice it that we have 4 coefficients that are not defined due to singularities
-# This means that certain predictors are perfectly correlated with each other
-# We can identify the ones by the NA values
-# They are :
-#	JobRole Manager
-#	Department Human Resources
-#	EducationField Human Resources
-# MaritalStatus Divorced
-
-# Therefore, we remove the problematic predictors
-data_fix <- subset(data, select = -c(`JobRole Manager`, `Department Human Resources`, `EducationField Human Resources`, `MaritalStatus Divorced`))
-
-# Then refit the model
-model <- lm(YearsAtCompany ~ ., data = data_fix)
-
-# Now we want to check for multicollinearity 
-vif_values <- vif(model)
-print(vif_values)
-
-
-
-##### way to calculate the upper 4, but we also see them directly and I dont know if we did alias() in class #####
-# Compute correlation matrix for numeric predictors
-numeric_predictors <- data[, sapply(data, is.numeric)]
-cor_matrix <- cor(numeric_predictors)
-print(cor_matrix)
-# Check for perfect collinearity among factor variables
-alias(model)
-##### way to calculate the upper 4, but we also see them directly and I dont know if we did alias() in class #####
-
-
-
-# Let us check and see if we have multicollinearity
-
-# Compute VIF
-vif_values <- vif(model)
-
-# We see, as also expected, that we have high VIF values (so high collinearity) especially for our one-hot encoded variables
-# Thus, we check in our multiple linear regression model how important they are (i.e. the p-value) ; depending on that
-# we keep them or remove them
-
-# We find the categorical variables
-# JobRole Healthcare Representative (2 stars)
-# JobRole Research Scientist (3 stars)
-# JobRole Sales Executive (3 stars)
-# JobRole Laboratory Technician (3 stars)
-# JobRole Sales Representatitve (2 stars)
-
-# to be significant. These we want to keep. To this effect, let us see how high their
-# VIF values were
-
-# JobRole Healthcare Representative (2.109646)
-#	JobRole Research Scientist (3.190587)
-#	JobRole Sales Executive (3.375146)
-#	JobRole Human Resources (1.485364)
-#	JobRole Research Director (1.709357)
-#	JobRole Laboratory Technician (2.991093)
-#	JobRole Manufacturing Director (2.222043)
-#	JobRole Sales Representative (1.732274)
-# We can see that all JobRoles were at highest around 3, which is fine. 
-
-
-# Let us now remove the probablematic categorical variables, that is
-#•	Department Sales (9.883511)
-#•	Department Research & Development (9.778514)
-#•	EducationField Life Sciences (23.672286)
-#•	EducationField Other (5.895711)
-#•	EducationField Medical (21.368588)
-#•	EducationField Marketing (10.784193)
-#•	EducationField Technical Degree (8.675798)
-
-# These are just the complete 2 variables Department and EducationField, so we remove them
-
-
-# used for the one hot encoding approach
-# We will remove Deparment and Education Field
-#columns_to_remove <- c("Department Sales", 
-#                       "Department Research & Development", 
-#                       "EducationField Life Sciences", 
-#                       "EducationField Other", 
-#                       "EducationField Medical", 
-#                       "EducationField Marketing", 
-##                       "EducationField Technical Degree")
-
-
-columns_to_remove <- c("Department", "EducationField")
-
-# Subset the dataframe to exclude the specified columns
-# data_fix if we do via one hot encoding
-#data_reduced <- data_fix[, !names(data_fix) %in% columns_to_remove]
-data_reduced <- data[, !names(data) %in% columns_to_remove]
-
-
-
-# Now we do the model again
-
-# Fit the multiple linear regression model
-model <- lm(YearsAtCompany ~ ., data = data_reduced)
-
-# Summarize the model
-summary(model)
-
-vif_values <- vif(model)
-print(vif_values)
-
-# Now everything is okay ! We fixed the multicollinearity problem
-
-# Check residual diagnostics
-
-# Examine the residuals of your model to ensure that the assumptions of linear regression are met:
-
-#•	Linearity: The relationship between the predictors and the response should be linear.
-#•	Homoscedasticity: The residuals should have constant variance.
-#•	Normality: The residuals should be approximately normally distributed.
-#•	Independence: The residuals should be independent.
-
-# Residual vs Fitted plot
-plot(model, which = 1)
-
-# What we can see : 
-#1.	Non-Linearity: The red line (lowess smoother) shows a clear non-linear pattern. 
-#Ideally, the red line should be close to the horizontal zero line if the model is appropriate. 
-#The curvature in the red line suggests that a non-linear relationship may exist between the predictors and the response variable.
-#2.	Heteroscedasticity: The spread of the residuals appears to increase with the fitted values,
-#suggesting heteroscedasticity (non-constant variance of residuals).
-#This is another indication that the linear model might not be the best fit.
-#3.	Outliers: There are some points that are far away from the zero line, 
-#indicating potential outliers or influential observations that could unduly affect the model.
-
-#Given the indication of non-linearity and heteroscedasticity, you might consider the following steps:
-
-#1.	Polynomial Regression: Incorporate polynomial terms to model the non-linear relationship.
-#2.	Transformation: Transform the response variable or predictors to stabilize the variance.
-#3.	Non-linear Models: Consider more flexible non-linear models such as Generalized Additive Models (GAMs).
-
-
-# Incoroprating polynomial terms is hard because we have multiple linear regression : we would have to try so many different ones (I think)
-# Instead, lets try to transform the response variable
-
-# Apply a log transformation to the response variable
-data_reduced$log_YearsAtCompany <- log(data_reduced$YearsAtCompany + 1)  # Add 1 to avoid log(0)
-
-# Fit the model with the transformed response variable
-model_log <- lm(log_YearsAtCompany ~ ., data = data_reduced)
-
-# Summary of the transformed model
-summary(model_log)
-
-# Plot Residuals vs Fitted for the transformed model
-plot(model_log, which = 1) # Again, we see a clear non-linear pattern 
-
-# Logarithmizing makes the non-linear shape much clearer, so we can model nicer in this way !
-
-# Now let us do feature selection
-
-# Backward selection
-
-# Perform backward selection using AIC
-backward_model <- step(model_log, direction = "backward")
-
-# Summary of the final model after backward selection
-summary(backward_model)
-
-# Residual vs Fitted plot
-plot(backward_model, which = 1)
-
-
-
-
-# Lasso regression
-####### DOES NOT WORK YET --> the problem is that lasso chooses certain
-# categorical variables values, but we do not have them one hot encoded (or atleast not all)
-# so then it cant make the model
-
-# Prepare data for glmnet
-x <- model.matrix(YearsAtCompany ~ ., data = data_reduced)[, -1]  # Remove the intercept
-y <- data_reduced$YearsAtCompany
-
-# Fit a Lasso regression model
-lasso_model <- cv.glmnet(x, y, alpha = 1, standardize = TRUE)
-
-# Coefficients from the Lasso model at the best lambda
-lasso_coef <- coef(lasso_model, s = "lambda.min")
-print(lasso_coef)
-
-# Convert to a matrix
-lasso_coef_matrix <- as.matrix(lasso_coef)
-
-# Extract the names of the selected features (excluding the intercept)
-selected_features <- rownames(lasso_coef_matrix)[lasso_coef_matrix[, 1] != 0]
-selected_features <- selected_features[selected_features != "(Intercept)"]
-print(selected_features)
-
-# Create formula with selected features
-selected_formula <- as.formula(paste("YearsAtCompany ~", paste(selected_features, collapse = " + ")))
-
-# Refit the model using only selected features
-final_model <- lm(selected_formula, data = data_reduced)
-
-# Check column names in data_reduced
-colnames(data_reduced)
-
-# Summary of the final model
-summary(final_model)
-
-# Residual vs Fitted plot
-plot(final_model, which = 1)
-
-
-
-
-
-
+##### FINAL MODEL USING BACKWARDS FEAT SELECT
+
+# Predicting on the test set
+predictions <- predict(final_model, newdata = test.data)
+
+sh# Calculate the Mean Squared Error (MSE)
+mse <- mean((test.data$YearsAtCompany - predictions)^2)
+print(paste("MSE on validation set:", mse))
+
+# Calculate residuals
+residuals <- test.data$YearsAtCompany - predictions
+
+# Plot residuals
+shutoff_plots()
+plot(predictions, residuals, 
+     xlab = "Predicted Values", 
+     ylab = "Residuals", 
+     main = "Residual Plot",
+     pch = 20, col = "blue")
+abline(h = 0, col = "red", lwd = 2)
+
+# Actual vs predicted 
+plot(test.data$YearsAtCompany, predictions,
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs Predicted Values",
+     pch = 20, col = "blue")
+abline(0, 1, col = "red", lwd = 2)  # Line with slope 1 to indicate perfect prediction
+
+
+# R-squared on the test set
+# Calculate R-squared
+ss_total <- sum((test.data$YearsAtCompany - mean(test.data$YearsAtCompany))^2)
+ss_res <- sum((test.data$YearsAtCompany - predictions)^2)
+r_squared <- 1 - (ss_res / ss_total)
+print(paste("R-squared on validation set for backwards feature selection:", r_squared))
+
+#### FINAL MODEL USING LASSO REGRESSION 
+
+# Create design matrix for predictors in the test set
+x_test <- model.matrix(poly_formula, data = test.data)[,-1]
+
+# Predictions
+lasso_predictions <- predict(lasso_model, newx = x_test, s = "lambda.min")
+
+# Calculate the Mean Squared Error (MSE) for Lasso
+lasso_mse <- mean((test.data$YearsAtCompany - lasso_predictions)^2)
+print(paste("Lasso MSE on validation set:", lasso_mse))
+
+# Calculate residuals
+lasso_residuals <- test.data$YearsAtCompany - lasso_predictions
+
+
+# Plot residuals
+shutoff_plots()
+plot(lasso_predictions, residuals, 
+     xlab = "Predicted Values", 
+     ylab = "Residuals", 
+     main = "Residual Plot",
+     pch = 20, col = "blue")
+abline(h = 0, col = "red", lwd = 2)
+
+# Plot predictions vs actual
+plot(test.data$YearsAtCompany, lasso_predictions,
+     xlab = "Actual Values", 
+     ylab = "Predicted Values", 
+     main = "Actual vs Predicted Values",
+     pch = 20, col = "blue")
+abline(0, 1, col = "red", lwd = 2)  # Line with slope 1 to indicate perfect prediction
+
+# R-squared on the test set
+# Calculate R-squared
+# ss_total same as above
+ss_res_lasso <- sum((test.data$YearsAtCompany - lasso_predictions)^2)
+r_squared_lasso <- 1 - (ss_res_lasso / ss_total)
+print(paste("R-squared on validation set for lasso regression:", r_squared_lasso))
 
 
 
