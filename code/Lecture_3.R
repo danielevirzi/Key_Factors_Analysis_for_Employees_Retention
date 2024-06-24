@@ -91,7 +91,7 @@ prob.hat
 log(prob.hat/(1-prob.hat))
 
 # predict the logit value
-logit.hat <-predict(logit.out, newdata=new.temp, type="link")
+logit.hat <- predict(logit.out, newdata=new.temp, type="link")
 logit.hat
 
 # check the predicted value

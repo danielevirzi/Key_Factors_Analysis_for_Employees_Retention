@@ -119,12 +119,11 @@ The main objectives of this project are:
 We start by loading the necessary libraries and the data into the R environment. The libraries that we will be using in this project are:
 
 ```{r libraries, echo=TRUE}
-
 library(MASS) # For step, glm, lda, qda
+library(e1071) # For naiveBayes
 library(car) # For vif
 library(corrplot) # For plotting correlation matrix
 library(pROC) # For ROC curve
-
 ```
 
 The data is loaded from the `general_data.csv` and `employee_survey_data.csv` files. We then merge the two datasets based on the `EmployeeID` variable.
@@ -212,7 +211,7 @@ str(data)
 
 We plot the distribution of the categorical variables in the dataset.
 
-```{r categorical_variables1, echo=FALSE, fig.width=10, fig.height=10}
+```{r categorical_variables1, echo=FALSE, fig.width=10, fig.height=9}
 par(mfrow=c(2,3), 
     mar=c(3,4,4,2))
 
@@ -275,7 +274,7 @@ We plot the distribution of the numerical variables in the dataset.
 
 ```{r numerical_variables, echo=FALSE, fig.width=10, fig.height=8}
 par(mfrow=c(2,4),  
-    mar=c(2,2,2,2))
+    mar=c(2,2,4,2))
 
 # Density plots for numerical variables
 plot(density(data$Age), main = "Age", xlab = "Age", col = c(4), border = "white", lwd = 4)
@@ -308,7 +307,7 @@ Then we plot the boxplot of the `YearsAtCompany` variable against all the catego
 
 ```{r years_at_company_boxplot, echo=FALSE, fig.width=10, fig.height=8}
 par(mfrow = c(3, 4),
-    mar = c(7, 4.5, 2, 2))
+    mar = c(6, 4, 3, 2))
 
 # Function to add rotated x-axis labels with vertical adjustment
 add_rotated_labels <- function(labels, vertical_adjustment = 1) {
@@ -372,7 +371,7 @@ Then we plot the boxplot of the `Attrition` variable against all the numerical v
 
 ```{r attrition_boxplot, echo=FALSE, fig.width=10, fig.height=6}
 par(mfrow=c(2,5),
-    mar = c(4, 2, 2, 2))
+    mar = c(6, 4, 3, 2))
 
 boxplot(Age~Attrition,data=data,main="Age",col=c(2,3))
 boxplot(DistanceFromHome~Attrition,data=data,main="DistanceFromHome",col=c(2,3))
@@ -410,7 +409,7 @@ We first split the dataset into a training set and a test set. We use 80% of the
 ```{r split_data, echo=TRUE}
 set.seed(123)
 n <- dim(data)[1]
-test <- sample(1:n, n*0.2) # indexes of data in the validation set
+test <- sample(1:n, n*0.2) # indexes of data in the test set
 train <- setdiff(1:n, test) # indexes of data in training set
 test.data <- data[test, ] # validation set
 train.data <- data[train, ] # training set
@@ -585,7 +584,7 @@ We try to improve the model removing influential points by using the Cook's dist
 cooksd <- cooks.distance(best_model)
 par(mfrow = c(1, 1))
 plot(cooksd, pch = "*", cex = 2, main = "Cook's Distance")
-abline(h = 3 *mean(cooksd, na.rm=TRUE),  col = c(2))
+abline(h = 3 *mean(cooksd, na.rm=TRUE),  col=c(2), lwd=2)
 ```
 
 
@@ -608,7 +607,7 @@ add_rotated_labels(colnames(data_reduced))
 We can see that the influential points are mostly outliers so removing these points can improve the model. We remove the influential points and fit the final model.
 
 ```{r remove_influential_points, echo=TRUE}
-final_train.set <- data_reduced[-influential, ]
+final_train.data <- data_reduced[-influential, ]
 ```
 
 ```{r final_model, echo=TRUE}
@@ -623,7 +622,7 @@ final_model <- lm(YearsAtCompany
                     YearsWithCurrManager +
                     poly(JobSatisfaction, 2, raw = TRUE),
                   
-                  data = final_train.set)
+                  data = final_train.data)
 R2_final <- summary(final_model)$r.squared
 R2_final
 ```
@@ -636,3 +635,239 @@ plot(final_model)
 The R-squared value of the final model is 0.84 which is better than the previous models. We can conclude that the outliers were affecting the model. We can use this model to predict the years at the company for new employees.
 
 ## 6.2 Classification Model
+
+The second goal of this analysis is to predict the attrition of employees. For this purpose, we will build a classification model and, to evaluate the performance of the model, we will use the R-squared metric. In this case, we can use defiance instead of RSS. This, because we can treat the deviance in almost the same way as the residual sum of squares in linear models, as a measure of the goodness of fit of the model. Since the target variable is binary, we will use the logistic regression model. The main idea is to start with all the variables and then remove the variables that are not significant. The best model will be the one with the highest R-squared value and the variables with the highest significance.
+
+
+### 6.2.1 Logistic Regression 
+
+We start by fitting the logistic regression model using all the variables.
+
+```{r logistic_regression, echo=TRUE}
+initial_model_logit <- glm(Attrition ~ ., data = train.data, family = binomial)
+```
+
+```{r logistic_regression_summary, echo=TRUE}
+summary_model_logit <- summary(initial_model_logit)
+R2_logit <- 1 - (summary_model_logit$deviance /
+                 summary_model_logit$null.deviance)
+R2_logit
+```
+
+### 6.2.2 Logistic Regression with Feature Selection
+
+The R-squared value of the model is 0.18 which is not very high. We can use the stepwise selection method to select the best model. We start with the full model and then we remove the variables that are not significant.
+
+```{r stepwise_selection, echo=TRUE, results='hide'}
+backward_model_logit <- step(initial_model_logit, direction = "backward")
+summary_backward_model_logit <- summary(backward_model_logit)
+summary_backward_model_logit
+```
+
+```{r stepwise_selection_summary, echo=TRUE}
+R2_backward_logit <- 1 - (summary_backward_model_logit$deviance /
+                          summary_backward_model_logit$null.deviance)
+R2_backward_logit
+```
+
+Stepwise selection removed some variables that were not significant. The R-squared value of the model is 0.17 which is worst. We can try to improve the model by selecting the variables with the highest significance.
+
+```{r significant_variables, echo=TRUE}
+final_model_logit <- glm(Attrition ~ 
+                          Age + 
+                          BusinessTravel + 
+                          Department + 
+                          MaritalStatus + 
+                          NumCompaniesWorked + 
+                          TotalWorkingYears +
+                          TrainingTimesLastYear + 
+                          YearsSinceLastPromotion +
+                          YearsWithCurrManager +
+                          JobSatisfaction +
+                          WorkLifeBalance, 
+                        data = train.data, family = binomial)
+
+summary_best_model_logit <- summary(final_model_logit)
+R2_best_logit <- 1 - (summary_best_model_logit$deviance / 
+                      summary_best_model_logit$null.deviance)
+R2_best_logit
+```
+
+The R-squared value of this model is 0.16 which is the worst but has only the significant variables. We can conclude that the logistic regression model may not be the best model for this dataset. We can try other classification models like LDA, QDA and Naive Bayes.
+
+\newpage
+
+### 6.2.3 LDA (Linear Discriminant Analysis)
+
+We fit the LDA model using the significant variables.
+
+```{r lda, echo=TRUE, results='hide'}
+model_lda <- lda(Attrition ~ 
+                   Age + 
+                   BusinessTravel + 
+                   Department + 
+                   MaritalStatus + 
+                   NumCompaniesWorked + 
+                   TotalWorkingYears +
+                   TrainingTimesLastYear + 
+                   YearsSinceLastPromotion +
+                   YearsWithCurrManager +
+                   JobSatisfaction +
+                   WorkLifeBalance, 
+                 data = train.data)
+model_lda
+```
+
+```{r lda_summary, echo=TRUE, fig.width=10, fig.height=8}
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 2))
+plot(model_lda, type="both", col = c(4))
+```
+
+### 6.2.4 QDA (Quadratic Discriminant Analysis)
+
+We fit the QDA model using the significant variables.
+
+```{r qda, echo=TRUE, results='hide'}
+model_qda <- qda(Attrition ~ 
+                   Age + 
+                   BusinessTravel + 
+                   Department + 
+                   MaritalStatus + 
+                   NumCompaniesWorked + 
+                   TotalWorkingYears +
+                   TrainingTimesLastYear + 
+                   YearsSinceLastPromotion +
+                   YearsWithCurrManager +
+                   JobSatisfaction +
+                   WorkLifeBalance, 
+                 data = train.data)
+model_qda
+```
+
+
+### 6.2.5 Naive Bayes
+
+We fit the Naive Bayes model using the significant variables.
+
+```{r naive_bayes, echo=TRUE, results='hide'}
+model_nb <- naiveBayes(Attrition ~ 
+                         Age + 
+                         BusinessTravel + 
+                         Department + 
+                         MaritalStatus + 
+                         NumCompaniesWorked + 
+                         TotalWorkingYears +
+                         TrainingTimesLastYear + 
+                         YearsSinceLastPromotion +
+                         YearsWithCurrManager +
+                         JobSatisfaction +
+                         WorkLifeBalance, 
+                       data = train.data)
+model_nb
+```
+
+
+\newpage
+
+# 7 Evaluation
+
+## 7.1 Regression Models
+
+We want to compare the initial regression model with the final model. So, we evaluate the regression models computing the Mean Squared Error (MSE) on the test set. Then we plot the residuals of the final model.
+
+```{r regression_evaluation, echo=TRUE}
+initial_predictions <- predict(model_slr, newdata = test.data)
+final_predictions <- predict(final_model, newdata = test.data)
+initial_mse <- mean((test.data$YearsAtCompany - initial_predictions)^2)
+final_mse <- mean((test.data$YearsAtCompany - final_predictions)^2)
+```
+
+```{r regression_evaluation_summary, echo=FALSE}
+print(paste("MSE of the initial model on test set:", initial_mse))
+print(paste("MSE of the final model on test set:", final_mse))
+```
+
+```{r residuals, echo=TRUE, fig.width=10, fig.height=6}
+residuals <- test.data$YearsAtCompany - final_predictions
+par(mfrow = c(1, 1))
+plot(residuals, pch = 20, main = "Residuals of the final model")
+abline(h = 0, col = "red")
+```
+
+The Mean Squared Error of the final model is lower than the initial model. The residuals of the final model are randomly distributed around zero, which is a good sign.
+
+## 7.2 Classification Models
+
+We evaluate the classification models computing the performance metrics used at lesson. We can compare the performance of the models and then we plot the confusion matrix of the best model and the ROC curve.
+
+
+```{r classification_evaluation, echo=TRUE}
+perf.measure <- function(true.values, pred.values,  lab.pos = 1){
+  conf.matrix <- table(pred.values, true.values)
+  n <- sum(conf.matrix)
+  lab.pos <- as.character(lab.pos)
+  lab <- rownames(conf.matrix)
+  lab.neg <- lab[lab != lab.pos]
+  TP <- conf.matrix[lab.pos, lab.pos]
+  TN <- conf.matrix[lab.neg, lab.neg]
+  FP <- conf.matrix[lab.pos, lab.neg]
+  FN <- conf.matrix[lab.neg, lab.pos]
+  P     <- TP + FN
+  N     <- FP + TN
+  P.ast <- TP + FP
+  OER <- (FP+FN)/n
+  PPV <- TP/P.ast
+  TPR <- TP/P
+  F1  <- 2*PPV*TPR/(PPV+TPR)
+  TNR <- TN/N
+  FPR <- FP/N
+  return(list(overall.ER = OER, PPV=PPV, TPR=TPR, F1=F1, TNR=TNR, FPR=FPR))
+}
+```
+
+```{r classification_evaluation_summary, echo=FALSE}
+initial_prob_logit <- predict(initial_model_logit, newdata = test.data, type = "response")
+
+initial_predictions_logit <- rep("No", 860)
+initial_predictions_logit[initial_prob_logit>0.5] <- "Yes"
+
+final_prob_logit <- predict(final_model_logit, newdata = test.data, type = "response")
+
+final_predictions_logit <- rep("No", 860)
+final_predictions_logit[final_prob_logit>0.5] <- "Yes"
+
+initial_perf <- perf.measure(test.data$Attrition, initial_predictions_logit, lab.pos = "Yes")
+final_perf <- perf.measure(test.data$Attrition, final_predictions_logit, lab.pos = "Yes")
+```
+
+We compare the performance of the initial logistic regression model with the final logistic regression model.
+
+| Metric                           | Initial Model | Final Model |
+|----------------------------------|---------------|-------------|
+| Overall Error Rate               | 0.15          | 0.14        |
+| Positive Predictive Value (PPV)  | 0.56          | 0.75        |
+| True Positive Rate (TPR)         | 0.13          | 0.16        |
+| F1 Score                         | 0.22          | 0.26        |
+| True Negative Rate (TNR)         | 0.98          | 0.99        |
+| False Positive Rate (FPR)        | 0.02          | 0.01        |
+
+
+We plot the confusion matrix of the final logistic regression model.
+
+```{r confusion_matrix, echo=TRUE, fig.width=10, fig.height=6}
+conf_matrix <- table(final_predictions_logit, test.data$Attrition)
+conf_matrix
+```
+
+We plot the ROC curve of the final logistic regression model, compute the AUC and find the best threshold.
+
+```{r roc_curve, echo=TRUE, fig.width=10, fig.height=6}
+roc.out <- roc(test.data$Attrition, final_prob_logit, levels=c("No", "Yes"))
+plot(roc.out,  print.auc=TRUE, legacy.axes=TRUE, xlab="False Positive Rate", ylab="True Positive Rate")
+auc(roc.out)
+coords(roc.out, "best")
+```
+
+The final logistic regression model has a better performance than the initial model. The confusion matrix shows that the final model has a higher number of true positives and true negatives. The ROC curve shows that the final model has a higher AUC than the initial model.
+
+

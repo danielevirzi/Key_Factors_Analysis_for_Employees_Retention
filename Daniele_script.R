@@ -381,9 +381,9 @@ train <- setdiff(1:n, test) # indexes of data in training set
 test.data <- data[test, ] # validation set
 train.data <- data[train, ] # training set
 
-
-length(test.data[1])
-length(train.data[1])
+# Print the dimensions of the data
+dim(train.data)
+dim(test.data)
 
 
 ######### LINEAR REGRESSION FOR YEARS AT COMPANY #########
@@ -504,7 +504,6 @@ plot(backward_model, which = 2)
 
 # Model with the best set of features 
 best_model <- lm(YearsAtCompany 
-                  
                   ~ poly(Age, 2, raw = TRUE) +
                     poly(Education, 2, raw = TRUE) +
                     Gender +
@@ -607,7 +606,7 @@ lasso_model <- cv.glmnet(x_train, y_train, alpha = 1)
 # Predicting on the test set
 predictions <- predict(final_model, newdata = test.data)
 
-sh# Calculate the Mean Squared Error (MSE)
+# Calculate the Mean Squared Error (MSE)
 mse <- mean((test.data$YearsAtCompany - predictions)^2)
 print(paste("MSE on validation set:", mse))
 
