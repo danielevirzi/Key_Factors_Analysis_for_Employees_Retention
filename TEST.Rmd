@@ -914,19 +914,39 @@ print(paste("Accuracy of the Naive Bayes model:", accuracy_nb, "%"))
 
 These are the results of the regression models:
 
-| Model        | MSE         | R-squared   |
-|---------------|-------------|-------------|
-| Base Model   | 16.20   | 0.59   |
-| Final Model  | 9.37    | 0.84   |
-
+| Metric        | Base Model | Final Model |
+|---------------|---------------|-------------|
+| MSE         | 16.208697     | 9.375506    |
+| R-squared     | 0.5870508     | 0.8417186   |
 
 The final model has a lower MSE and a higher R-squared value than the base model. Therefore, the final model is the better model and should be used for predicting the attrition rate of employees.
 
 ## 8.2 Comparison of Classification Models
 
-We first plot the ROC curves of the models and compare the AUC values.
+These are the results of the classification models:
 
-```{r roc_curves, echo=TRUE, fig.width=10, fig.height=4}
+```{r classification_evaluation_comparison, echo=TRUE}
+base.logit.result <- perf.measure(test.data$Attrition, base.logit.pred, lab.pos = "Yes")
+final.logit.result <- perf.measure(test.data$Attrition, final.logit.pred, lab.pos = "Yes")
+lda.result <- perf.measure(test.data$Attrition, lda.pred, lab.pos = "Yes")
+qda.result <- perf.measure(test.data$Attrition, qda.pred, lab.pos = "Yes")
+nb.result <- perf.measure(test.data$Attrition, nb.pred, lab.pos = "Yes")
+```
+
+
+| Metric                | Logistic Regression (All Features) | Logistic Regression (Feature Selection) | LDA      | QDA      | Naive Bayes |
+|-----------------------|--------------------------|---------------------------|----------|----------|-------------|
+| Accuracy              | 0.85                    | 0.86                    | 0.85    | 0.8    | 0.84      |
+| Overall Error Rate    | 0.15                    | 0.14                     | 0.15     | 0.2      | 0.16       |
+| PPV                   | 0.5625                   | 0.75                      | 0.6087   | 0.3643   | 0.4407      |
+| TPR                   | 0.1343                   | 0.1567                    | 0.1045   | 0.3806   | 0.194       |
+| F1 Score              | 0.2169                   | 0.2593                    | 0.1783   | 0.3723   | 0.2694      |
+| TNR                   | 0.9807                   | 0.9904                    | 0.9876   | 0.8774   | 0.9545      |
+| FPR                   | 0.0193                   | 0.0096                    | 0.0124   | 0.1226   | 0.0455      |
+
+The logistic regression model with feature selection has the highest accuracy and the QDA model has the highest F1 score. In this case, since accuracy is the most important metric, the logistic regression model with feature selection is slightly better than the other models. We can also use the ROC curve to compare the models.
+
+```{r roc_curves, echo=TRUE, fig.width=10, fig.height=6}
 roc.out_base <- roc(test.data$Attrition, base.logit.prob, levels=c("No", "Yes"))
 roc.out_final <- roc(test.data$Attrition, final.logit.prob, levels=c("No", "Yes"))
 roc.out_lda <- roc(test.data$Attrition, lda.prob$posterior[,2], levels=c("No", "Yes"))
@@ -944,39 +964,4 @@ legend("bottomright", legend=c("Logistic Regression (All Features)",
        col=c("red", "blue", "green", "purple", "orange"), lty=1)
 ```
 
-```{r auc, echo=TRUE}
-auc_base <- round(auc(roc.out_base), 2)
-auc_final <- round(auc(roc.out_final), 2)
-auc_lda <- round(auc(roc.out_lda), 2)
-auc_qda <- round(auc(roc.out_qda), 2)
-auc_nb <- round(auc(roc.out_nb), 2)
-```
-
-These are the results of the classification models:
-
-```{r classification_evaluation_comparison, echo=TRUE}
-base.logit.result <- perf.measure(test.data$Attrition, base.logit.pred, lab.pos = "Yes")
-final.logit.result <- perf.measure(test.data$Attrition, final.logit.pred, lab.pos = "Yes")
-lda.result <- perf.measure(test.data$Attrition, lda.pred, lab.pos = "Yes")
-qda.result <- perf.measure(test.data$Attrition, qda.pred, lab.pos = "Yes")
-nb.result <- perf.measure(test.data$Attrition, nb.pred, lab.pos = "Yes")
-```
-
-
-| Model               | Accuracy | PPV   | TPR   | F1 Score | TNR   | FPR   | AUC   |
-|-----------------------|----------|-------|-------|----------|-------|-------|-------|
-| Logistic Regression | 0.85     | 0.56  | 0.13  | 0.21     | 0.98  | 0.02  | 0.76  |
-|(All Features)       |     |   |  |     |   |  |   |
-| Logistic Regression (Feature Selection)  | 0.86     | 0.75  | 0.16  | 0.26     | 0.99  | 0.01  | 0.76  |
-| LDA                                     | 0.85     | 0.60  | 0.10  | 0.18     | 0.98  | 0.01  | 0.75  |
-| QDA                                     | 0.80     | 0.36  | 0.38  | 0.37     | 0.87  | 0.12  | 0.73  |
-| Naive Bayes                             | 0.84     | 0.44  | 0.20  | 0.27     | 0.95  | 0.05  | 0.72  |
-
-
-
-The logistic regression model with feature selection has the highest accuracy and the QDA model has the highest F1 score. In this case, since accuracy is the most important metric, the logistic regression model with feature selection is slightly better than the other models. The ROC curve shows that the logistic regression models have the highest AUC value. In conclusion, the logistic regression model with feature selection is the best model for predicting employee attrition.
-
-
-
-
-
+The ROC curve shows that the logistic regression model with feature selection has the highest AUC value. In conclusion, the logistic regression model with feature selection is the best model for predicting employee attrition.
