@@ -679,6 +679,20 @@ r_squared_lasso <- 1 - (ss_res_lasso / ss_total)
 print(paste("R-squared on validation set for lasso regression:", r_squared_lasso))
 
 
+#BALANCING THE DATASET (put after 6.2 Classification Model)
 
+positive_samples <- train.data[train.data$Attrition == 'Yes', ]
+negative_samples <- train.data[train.data$Attrition == 'No', ]
 
+set.seed(123)
 
+negative_sampled <- negative_samples[sample(nrow(negative_samples), 1200), ]
+
+balanced_train <- rbind(positive_samples, negative_sampled)
+
+balanced_train <- balanced_train[sample(nrow(balanced_train)), ]
+
+print(table(balanced_train$Attrition))
+
+#Overwriting train.data as to not have to change all the models below
+train.data <- balanced_train
