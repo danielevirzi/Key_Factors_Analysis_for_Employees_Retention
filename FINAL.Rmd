@@ -976,6 +976,16 @@ nb.result <- perf.measure(test.data$Attrition, nb.pred, lab.pos = "Yes")
 
 The logistic regression model with feature selection has the highest accuracy and the QDA model has the highest F1 score. In this case, since accuracy is the most important metric, the logistic regression model with feature selection is slightly better than the other models. The ROC curve shows that the logistic regression models have the highest AUC value. In conclusion, the logistic regression model with feature selection is the best model for predicting employee attrition.
 
+This are the results balancing classes:
+
+| Model               | Accuracy | PPV   | TPR   | F1 Score | TNR   | FPR   | AUC   |
+|-----------------------|----------|-------|-------|----------|-------|-------|-------|
+| Logistic Regression | 0.80     | 0.38  | 0.41  | 0.40     | 0.87  | 0.12  | 0.77  |
+|(All Features)       |     |   |  |     |   |  |   |
+| Logistic Regression (Feature Selection)  | 0.80     | 0.38  | 0.42  | 0.40     | 0.87  | 0.12  | 0.76  |
+| LDA                                     | 0.82     | 0.41  | 0.41  | 0.41     | 0.89  | 0.10  | 0.76  |
+| QDA                                     | 0.78     | 0.34  | 0.51  | 0.41     | 0.81  | 0.18  | 0.72  |
+| Naive Bayes                             | 0.76     | 0.34  | 0.47  | 0.40     | 0.83  | 0.16  | 0.73  |
 
 
 
