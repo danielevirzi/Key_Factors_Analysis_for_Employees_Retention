@@ -34,12 +34,12 @@ script_dir <- getwd()
 
 # 1. Introduction
 
-This project is a collaborative effort of three *Data Science* students; *Marlon Helbing*, *Nemanja Ilic*, *Daniele Virzì*. It is an academic project that will be graded based on the quality and depth of the analysis. The project aims to apply the concepts and techniques from the *Statistical Learning* course to a real-world dataset. Our project is based on the *HR Analytics Case Study* and we will use the programming language *R* to perform the analysis. As previously stated, the scope of this project is to assess the knowledge we have gained from the course. Because of this, in our project work, we were only allowed to utilize the models and techniques covered in the lectures; we were not permitted to use any `Tidyverse` R-packages, like `ggplot` or `ggplot2`.
+A key factor in a thriving business is the retention of employees, evidenced by their long-term commitment to the company. But what strategies can a business implement to achieve this? What drives employees to leave? In this statistical analysis conducted by *Marlon Helbing*, *Nemanja Ilic*, *Daniele Virzì*, we will develop both Regression and Classification Models using a publicly available HR dataset from a company. We will optimize these models iteratively based on various metrics and present our findings, discussing the insights they reveal.
 
 
 ## 1.1 Dataset
 
--   [**HR Analytics Case Study**](https://www.kaggle.com/datasets/vjchoudhary7/hr-analytics-case-study): This set of datasets, sourced from *Kaggle*, contains information about employees working in a company. These data are collected to understand why the employees are leaving the company and to predict the employees who are likely to leave the company. There are several datasets available for this case study but for our purposes we have chosen and merged just two of them, `general_data` and `employee_survey_data`. The final dataset contains 4410 observations and 27 variables. The variables are as follows:
+-   [**HR Analytics Case Study**](https://www.kaggle.com/datasets/vjchoudhary7/hr-analytics-case-study): This dataset, sourced from *Kaggle*, contains data on around 4000 employees and includes numerous features. Since these features were spread across multiple files and not all were relevant to our study, we selected two files, `general_data` and `employee_survey_data`. The final dataset consists of 4410 observations and 27 variables. The variables are as follows:
 
     -   **`Age`**: Age of the employee.
     -   **`Attrition`**: Whether the employee has left the company or not.
@@ -74,12 +74,12 @@ This project is a collaborative effort of three *Data Science* students; *Marlon
 
 ## 1.2 Project goals
 
-The main objectives of this project are:
+Following an initial analysis of the dataset, we identified two features that stood out and were well-suited for an in-depth analysis using statistical tools:
 
--   **Regression Model**: To predict `YearsAtCompany` based on the available features, in order to understand the factors that influence the number of years an employee stays in the company. In this way, the company can take actions to retain employees for a longer period of time.
+-   **Regression Model**: In order to understand the factors that influence the number of years an employee stays in the company, we analyze `YearsAtCompany` based on the available features. This analysis offers the company valuable insights into which variables most significantly impact the duration of an employee’s tenure.
 
 
--  **Classification Model**: To predict `Attrition` based on the available features, in order to understand the factors that influence the attrition of employees in the company. In this way, the company can take actions to reduce the attrition rate.
+-  **Classification Model**: In order to understand the factors that influence the attrition of employees in the company, we analyze `Attrition` based on the available features. This allows the company to identify which variables most significantly affect the employee attrition rate.
 
 
 ## 1.3 Methodology
@@ -88,7 +88,7 @@ The main objectives of this project are:
 
 \usetikzlibrary{shapes.geometric,arrows}
 
-\begin{tikzpicture}[node distance=1.5cm, auto]
+\begin{tikzpicture}[node distance=2cm, auto]
 
 \tikzstyle{block}=[rectangle, draw, text width=10em, text centered, rounded      corners, minimum height=3em]
 \tikzstyle{line}=[draw, -latex]  
@@ -114,9 +114,12 @@ The main objectives of this project are:
 
 ```
 
+
+\newpage 
+
 # 2. Data Loading
 
-We start by loading the necessary libraries and the data into the R environment. The libraries that we will be using in this project are:
+We begin by loading the necessary libraries and the dataset into the R environment. The libraries used in this project are:
 
 ```{r libraries, echo=TRUE}
 library(MASS) # For step, glm, lda, qda
@@ -126,7 +129,7 @@ library(corrplot) # For plotting correlation matrix
 library(pROC) # For ROC curve
 ```
 
-The data is loaded from the `general_data.csv` and `employee_survey_data.csv` files. We then merge the two datasets based on the `EmployeeID` variable.
+The data is obtained from `general_data.csv` and `employee_survey_data.csv`. We then merge them on the `EmployeeID` variable.
 
 ```{r data_loading, echo=TRUE}
 general_data <- read.csv("./data/general_data.csv")
@@ -140,7 +143,7 @@ data <- merge(general_data, employee_survey_data, by = "EmployeeID")
 
 ## 3.1 Handling missing values
 
-We check for missing values in the dataset and find that there are 111 misssing values.
+We found 111 missing values in our dataset. As these constitute at most 2.5% of the data, we opted to remove these rows entirely rather than use imputation methods, allowing us to work with an unaltered dataset.
 
 ```{r missing_values, echo=TRUE}
 
@@ -152,16 +155,16 @@ data <- na.omit(data)
 
 ## 3.2 Handling duplicate rows
 
-We check for duplicate rows in the dataset and find that there are no duplicate rows.
+We found no duplicated rows in our dataset.
 
 ```{r duplicate_rows, echo=TRUE}
 duplicates <- sum(duplicated(data))
 duplicates
 ```
 
-## 3.3 Removing unnecessary columns
+## 3.3 Removing unnecessary features
 
-We remove the `EmployeeID`, because it is a unique identifier and does not provide any useful information for the analysis. We also remove the `Over18`, `StandardHours`, and `EmployeeCount` columns because they have the same value for all employees and so the variance is zero.
+We removed `EmployeeID`, because it is a unique identifier and does not provide any useful information for the analysis. Since `Over18`, `StandardHours`, and `EmployeeCount` had the same value for all employees, resulting in zero variance, we deleted these aswell.
 
 ```{r remove_columns, echo=TRUE}
 data <- data[, !(names(data) %in% c("EmployeeID", "Over18", "StandardHours", "EmployeeCount"))]
@@ -171,7 +174,7 @@ data <- data[, !(names(data) %in% c("EmployeeID", "Over18", "StandardHours", "Em
 
 ## 4.1 Encoding categorical variables
 
-We encode the categorical variables as factors in order to use them in the regression and classification models.
+We identified the categorical variables and encoded them using the R *factor* data type.
 
 ```{r encoding, echo=TRUE}
 data$Attrition <- factor(data$Attrition)
@@ -191,29 +194,33 @@ data$WorkLifeBalance <- factor(data$WorkLifeBalance)
 
 ## 4.2 Log transformation
 
-We perform log transformation on the `MonthlyIncome` variable to make it more normally distributed.
+We found `MonthlyIncome` to be right-skewed, thus we applied a log transformation to normalize its distribution.
 
 ```{r log_transformation, echo=TRUE}
 data$MonthlyIncome <- log(data$MonthlyIncome)
 ```
 
-## 4.3 Check the structure of the dataset
+## 4.3 Final structure of the dataset
 
-We check the structure of the dataset to ensure that the data preprocessing steps have been applied correctly.
+We showcase the dataset after cleaning and preprocessing.
 
 ```{r structure, echo=TRUE}
 str(data)
 ```
 
+\newpage
+
+
 # 5. Exploratory Data Analysis
+
+To get a better overview over our categorical and numerical variables, we used various charts to visualize their distribution. Then we analyzed our two features of interest, `YearsAtCompany` and `Attrition` to understand their relationship with other variables in the dataset.
 
 ## 5.1 Categorical variables
 
-We plot the distribution of the categorical variables in the dataset.
 
 ```{r categorical_variables1, echo=FALSE, fig.width=10, fig.height=9}
 par(mfrow=c(2,3), 
-    mar=c(3,4,4,2))
+    mar=c(3,4,4,4))
 
 
 plot(data$EnvironmentSatisfaction,col=c(2:5), main="Environment Satisfaction", las=1)
@@ -255,9 +262,9 @@ legend("bottomright", legend = names(percent_EducationField), fill = rainbow(len
 title(main="Education Field", cex.main = 1.5, line = -10)
 ```
 
-\newpage
 
-We notice that `JobSatisfaction` and `EnvironmentSatisfaction` are extremely similar. To check this we compute the chi squared statistic between these two. The null hypothesis is that the two variables are independent. The p-value is less than 0.1, so we reject the null hypothesis and conclude that the two variables are dependent. So we remove the `EnvironmentSatisfaction` variable from the dataset.
+
+We noticed a high similarity in the distributions of `JobSatisfaction` and `EnvironmentSatisfaction`. To confirm this observation, we computed the chi-squared statistic between these two variables, with the null hypothesis being that they are independent. The p-value was less than 0.1, leading us to reject the null hypothesis and conclude that the two variables are dependent. Consequently, we removed `EnvironmentSatisfaction` from the dataset.
 
 ```{r chi_squared, echo=TRUE}
 
@@ -270,7 +277,6 @@ data$EnvironmentSatisfaction <- NULL
 
 ## 5.2 Numerical variables
 
-We plot the distribution of the numerical variables in the dataset.
 
 ```{r numerical_variables, echo=FALSE, fig.width=10, fig.height=8}
 par(mfrow=c(2,4),  
@@ -289,9 +295,20 @@ hist(data$YearsWithCurrManager, main = "Years With Current Manager", xlab = "Yea
 hist(data$NumCompaniesWorked, main = "Number of Companies Worked", xlab = "Number of Companies Worked", col = c(4), border = "white")
 ```
 
+```{r correlation_matrix, echo=FALSE, fig.width=10, fig.height=10}
+par(mfrow = c(1, 1),
+    mar = c(1, 1, 1, 1))
+numeric_data <- data[, sapply(data, is.numeric)]
+correlation_matrix <- cor(numeric_data)
+corrplot(correlation_matrix, method = "color", type = "upper")
+```
+
+We notice that `YearsAtCompany` is highly correlated with `YearsWithCurrManager`. Therefore, we started building the regression model from this variable as we will see later. 
+\newpage 
+
 ## 5.3 Years At Company Analysis
 
-We plot the distribution of the `YearsAtCompany` variable, our target variable for the regression model.
+First we visualized the distribution of `YearsAtCompany` to get an overview.
 
 ```{r years_at_company, echo=FALSE, fig.width=10, fig.height=3}
 par(mfrow = c(1, 1), mar = c(4, 4, 2, 2) + 0.1, cex.axis = 0.8, cex.lab = 0.8)
@@ -303,7 +320,7 @@ hist(data$YearsAtCompany,
      breaks = 50)
 ```
 
-Then we plot the boxplot of the `YearsAtCompany` variable against all the categorical variables in the dataset.
+Then we analyzed the relationship of our variable of interest against all the categorical variables using boxplots.
 
 ```{r years_at_company_boxplot, echo=FALSE, fig.width=10, fig.height=8}
 par(mfrow = c(3, 4),
@@ -351,9 +368,13 @@ boxplot(YearsAtCompany ~ WorkLifeBalance, data = data, main = "Work-Life Balance
 
 ```
 
+
+
+\newpage 
+
 ## 5.4 Attrition Analysis
 
-We plot the distribution of the `Attrition` variable, our target variable for the classification model.
+We visualized the distribution of `Attrition`.
 
 ```{r attrition, echo=FALSE, fig.width=10, fig.height=5}
 attrition_distribution <- table(data$Attrition)
@@ -367,11 +388,11 @@ barplot(attrition_distribution,
         las = 0) 
 ```
 
-Then we plot the boxplot of the `Attrition` variable against all the numerical variables in the dataset.
+Afterwards, we plotted our variable of interest against all numerical variables.
 
 ```{r attrition_boxplot, echo=FALSE, fig.width=10, fig.height=6}
 par(mfrow=c(2,5),
-    mar = c(6, 4, 3, 2))
+    mar = c(6, 4, 3, 4))
 
 boxplot(Age~Attrition,data=data,main="Age",col=c(2,3))
 boxplot(DistanceFromHome~Attrition,data=data,main="DistanceFromHome",col=c(2,3))
@@ -385,26 +406,13 @@ boxplot(YearsSinceLastPromotion~Attrition,data=data,main="YearsSinceLastPromotio
 boxplot(YearsWithCurrManager~Attrition,data=data,main="YearsWithCurrManager",col=c(2,3))
 ```
 
-## 5.5 Correlation Analysis
 
-We calculate the correlation matrix of the numerical variables in the dataset.
 
-```{r correlation_matrix, echo=FALSE, fig.width=10, fig.height=10}
-par(mfrow = c(1, 1),
-    mar = c(1, 1, 1, 1))
-numeric_data <- data[, sapply(data, is.numeric)]
-correlation_matrix <- cor(numeric_data)
-corrplot(correlation_matrix, method = "color", type = "upper")
-```
-
-We notice that `YearsAtCompany` is highly correlated with `YearsWithCurrManager`. We will start from this variable to build the regression model. 
-
-\newpage
-
+\newpage 
 
 # 6. Model Building
 
-We first split the dataset into a training set and a test set. We use 80% of the data for training and 20% for testing.
+First, we split the dataset into a training and test set in a 80%/20% ratio.
 
 ```{r split_data, echo=TRUE}
 set.seed(123)
@@ -420,13 +428,13 @@ print(paste("Number of observations in the training set: ", dim(train.data)[1]))
 print(paste("Number of observations in the test set: ", dim(test.data)[1]))
 ```
 
-## 6.1 Regression Model
+## 6.1 Regression Models
 
-The goal of this analysis is to predict the number of years an employee has worked at the company. For this purpose, we will build a regression model and, to evaluate the performance of the model, we will use the R-squared metric. The main idea is to start with a simple model and then add more variables to improve the model. The best model will be the one with the highest R-squared value and the variables with the highest significance.
+The goal was to develop a robust and accurate model that helps us understand which features influence the number of years an employee spends at the company and the nature of their impact. Our approach began with a simple regression model, which we incrementally enhanced using various statistical tools. The optimal model was identified based on the highest R-squared value, calculated using the test set for each model, and included the most significant variables for predicting `YearsAtCompany`.
 
 ### 6.1.1 Simple Linear Regression
 
-We start building a simple regression model to predict the `YearsAtCompany` variable. We use the `YearsWithCurrManager` variable as the predictor.
+We started with a simple regression model, which predicts `YearsAtCompany` using only `YearsWithCurrManager` as the independent variable.
 
 ```{r simple_regression_model, echo=TRUE}
 model_base <- lm(YearsAtCompany ~ YearsWithCurrManager, data = train.data)
@@ -440,7 +448,7 @@ par(mfrow = c(2, 2), mar = c(4, 4, 2, 2))
 plot(model_base)
 ```
 
-Since we use only one variable to build the model, we can plot the regression line on the scatter plot to visualize how well the model fits the data.
+Since we used only one variable for this model, we plotted the regression line on a scatter plot to visualize how well the model fits the data.
 
 ```{r plot_simple_regression_model, echo=TRUE, fig.width=13, fig.height=5}
 par(mfrow = c(1, 1), mar = c(4, 4, 2, 2))
@@ -449,12 +457,14 @@ plot(train.data$YearsWithCurrManager, train.data$YearsAtCompany,
      main = "Simple Linear Regression")
 abline(model_base, col = "red", lwd = 3)
 ```
-From the R-squared value and the plots, we can see that the model is too simple and does not fit the data well.
+
+
+Based on the low R-squared score of 0.59, this simple regression model lacks complexity and does not fit the data well.
 
 
 ### 6.1.2 Multiple Linear Regression
 
-The first model has an R-squared value of 0.58, which is not very high. We try to improve the model by adding more variables. We use all the numerical variables in the dataset as predictors.
+Seeing that a single predictor was insufficient, we built a multiple regression model using all the variables in the dataset, which resulted in an R-squared score of 0.75.
 
 ```{r multiple_regression_model, echo=TRUE}
 model_mlr1 <- lm(YearsAtCompany ~ ., data = train.data)
@@ -470,9 +480,11 @@ R2_mlr1
 
 ```
 
-### 6.1.3 Multiple Linear Regression with Feature Selection
+### 6.1.3 Multiple Linear Regression without Multicollinearity
 
-The multiple regression model has an R-squared value of 0.75, which is better than the simple regression model. However, we can improve the model by checking for multicollinearity in the multiple regression model and remove the variables that are highly correlated (VIF > 5). Then, we build a new model with the remaining variables.
+The multiple linear regression model demonstrates significant improvements over the simple linear regression model based on our comparison metric.
+However, we noticed that some variables were highly correlated in the current best model. Therefore, we decided to remove variables that were highly correlated (VIF > 5) and build our optimized model with the remaining variables.
+
 
 ```{r mulitcollinearity, echo=TRUE, results='hide'}
 vif_values <- vif(model_mlr1)
@@ -494,11 +506,11 @@ R2_mlr2
 #plot(model_mlr2, which = 2)
 ```
 
-The R-squared value of the new model is 0.75, which is the same as the previous model. We can conclude that the variables `Department` and `EducationField` do not contribute to the model.
+Based on the R-squared score, this model did not show any improvement compared to the previously best-performing model. Nevertheless, as multicollinearity potentially leads to unstable coefficients and reduced model interpretability, we omit variables `Department` and `EducationField` for further analysis.
 
 ### 6.1.4 Polynomial Regression
 
-We can try to improve the model by adding polynomial terms to the model. In order to do this, we will add the square of all the numerical variables in the dataset as predictors.
+To account for more complex and non-linear interactions between predictor variables, we chose to use a polynomial regression model to possibly improve the fit of the model to the data. To achieve this, we will take the square of each of the currently selected features as predictors.
 
 ```{r polynomial_regression_model, echo=TRUE}
 model_pr <- lm(YearsAtCompany ~ 
@@ -532,11 +544,13 @@ R2_pr
 #plot(model_pr, which = 2)
 ```
 
-The R-squared value of the polynomial regression model is 0.77, which is not significantly better than the multiple regression model.
+We achieve an improvement of 0.02 in the R-squared value compared to the previous model.
 
 ### 6.1.5 Polynomial Regression with Feature Selection
 
-We can try to improve the polynomial regression model by removing the variables that are not significant. We use the backward selection method to remove the variables that do not contribute to the model minimizing the AIC value.
+
+To further improve the polynomial regression model, we used backward feature selection, which iteratively removes the variable that minimized the AIC the most.
+
 
 ```{r backward_elimination, echo=TRUE, results='hide'}
 backward_model <- step(model_pr, direction = "backward")
@@ -553,7 +567,7 @@ R2_backward
 #plot(backward_model, which = 2)
 ```
 
-After the backward elimination, the R-squared value of the model is 0.77, which is the same as the previous model. We can conclude that the backward elimination did not improve the model at all. So, we try to improve the selecting manually the variables that are significant.
+After backward elimination, the R-squared value of the model remains at 0.77, showing no improvement over the current best model. However, we have achieved a less complex model that predicts `YearsAtCompany` as effectively as the previous model. Therefore, we will continue working with the selected predictors.
 
 ```{r manual_feature_selection, echo=TRUE}
 best_model <- lm(YearsAtCompany 
@@ -580,7 +594,7 @@ R2_best
 
 ### 6.1.6 Final Model
 
-We try to improve the model removing influential points by using the Cook's distance method and setting a threshold of 3 times the mean Cook's distance. First, we calculate the Cook's distance for each observation and then we identify the influential points.
+As a final step, we removed influential points with a Cook’s distance greater than three times the mean Cook’s distance across all observations.
 
 ```{r cooks_distance, echo=TRUE, fig.width=10, fig.height=7}
 cooksd <- cooks.distance(best_model)
@@ -595,7 +609,7 @@ influential <- which(cooksd > 3*mean(cooksd, na.rm=TRUE))
 length(influential)
 ```
 
-We can compare the boxplots of the original data and the influential points to see if these points are outliers.
+Comparing the original data to the points selected as influential, we can see that these points are mostly outliers. Thus, we decided to remove these points to potentially improve our model.
 
 ```{r plot_influential_points, echo=FALSE, fig.width=15, fig.height=8}
 par(mfrow = c(1, 2), mar = c(8, 4, 4, 2))
@@ -605,8 +619,6 @@ add_rotated_labels(colnames(data_reduced))
 boxplot(data_reduced[influential, ], main = "Influential Points", xaxt = "n", xlab = "")
 add_rotated_labels(colnames(data_reduced))
 ```
-
-We can see that the influential points are mostly outliers so removing these points can improve the model. We remove the influential points and fit the final model.
 
 ```{r remove_influential_points, echo=TRUE}
 final_train.data <- data_reduced[-influential, ]
@@ -634,31 +646,25 @@ par(mfrow = c(2, 2), mar = c(4, 4, 2, 2))
 plot(final_model)
 ```
 
-The R-squared value of the final model is 0.84 which is better than the previous models. We can conclude that the outliers were affecting the model. We can use this model to predict the years at the company for new employees.
+This final model achieved an R-squared value of 0.84, making it our best model overall. We conclude our regression analysis at this point and move on to the classification models.
 
-## 6.2 Classification Model
+## 6.2 Classification Models
 
-The second goal of this analysis is to predict the attrition of employees. For this purpose, we will build a classification model and, to evaluate the performance of the model, we will use the R-squared metric. In this case, we can use defiance instead of RSS. This, because we can treat the deviance in almost the same way as the residual sum of squares in linear models, as a measure of the goodness of fit of the model. Since the target variable is binary, we will use the logistic regression model. The main idea is to start with all the variables and then remove the variables that are not significant. The best model will be the one with the highest R-squared value and the variables with the highest significance.
+The goal was to develop an accurate model that enables a company to understand which features affect employee attrition and how these features influence it. Given the binary response variable `Attrition`, our approach began with optimizing a Logistic Regression model and, using the selected predictors, we subsequently tested multiple well-known classification models in statistics. Our evaluation metric of choice was Accuracy, with the scores calculated based on the test set.
 
 
 ### 6.2.1 Logistic Regression 
 
-We start by fitting the logistic regression model using all the variables.
+We fitted a simple logistic regression model that incorporated all variables as predictors. Here we reached an accuracy of 0.84, which is a good starting point.
 
 ```{r logistic_regression, echo=TRUE}
 initial_model_logit <- glm(Attrition ~ ., data = train.data, family = binomial)
 ```
 
-```{r logistic_regression_summary, echo=TRUE}
-summary_model_logit <- summary(initial_model_logit)
-R2_logit <- 1 - (summary_model_logit$deviance /
-                 summary_model_logit$null.deviance)
-R2_logit
-```
 
 ### 6.2.2 Logistic Regression with Feature Selection
 
-The R-squared value of the model is 0.18 which is not very high. We can use the stepwise selection method to select the best model. We start with the full model and then we remove the variables that are not significant.
+As we did earlier to enhance our polynomial regression model, we employed backward feature selection to identify and retain only the most significant variables for our task.
 
 ```{r stepwise_selection, echo=TRUE, results='hide'}
 backward_model_logit <- step(initial_model_logit, direction = "backward")
@@ -666,13 +672,7 @@ summary_backward_model_logit <- summary(backward_model_logit)
 summary_backward_model_logit
 ```
 
-```{r stepwise_selection_summary, echo=TRUE}
-R2_backward_logit <- 1 - (summary_backward_model_logit$deviance /
-                          summary_backward_model_logit$null.deviance)
-R2_backward_logit
-```
-
-Stepwise selection removed some variables that were not significant. The R-squared value of the model is 0.17 which is worst. We can try to improve the model by selecting the variables with the highest significance.
+We observed a slight improvement of 0.01 in accuracy. For the same reasons outlined in the regression analysis, we will proceed with our analysis using the selected predictors.
 
 ```{r significant_variables, echo=TRUE}
 final_model_logit <- glm(Attrition ~ 
@@ -690,18 +690,15 @@ final_model_logit <- glm(Attrition ~
                         data = train.data, family = binomial)
 
 summary_best_model_logit <- summary(final_model_logit)
-R2_best_logit <- 1 - (summary_best_model_logit$deviance / 
-                      summary_best_model_logit$null.deviance)
-R2_best_logit
 ```
 
-The R-squared value of this model is 0.16 which is the worst but has only the significant variables. We can conclude that the logistic regression model may not be the best model for this dataset. We can try other classification models like LDA, QDA and Naive Bayes.
+Next, we will concentrate on several other common classification models used in statistical analysis.
 
-\newpage
 
 ### 6.2.3 LDA (Linear Discriminant Analysis)
 
-We fit the LDA model using the significant variables.
+Using LDA, our goal was to identify the linear combinations of predictive features that most effectively differentiate between employees who remained with the company and those who left.
+
 
 ```{r lda, echo=TRUE, results='hide'}
 model_lda <- lda(Attrition ~ 
@@ -724,9 +721,11 @@ par(mfrow = c(2, 1), mar = c(4, 4, 2, 2))
 plot(model_lda, type="both", col = c(4))
 ```
 
+Achieving an accuracy score of 0.84, the LDA model performed similarly to the logistic regression model.
+
 ### 6.2.4 QDA (Quadratic Discriminant Analysis)
 
-We fit the QDA model using the significant variables.
+QDA is a more flexible model than LDA, as it does not assume that the covariance of the predictors is the same in each class. Thus, we tried QDA to see if we can achieve a performance improvement.
 
 ```{r qda, echo=TRUE, results='hide'}
 model_qda <- qda(Attrition ~ 
@@ -745,9 +744,15 @@ model_qda <- qda(Attrition ~
 ```
 
 
+
+
+In our analysis, the QDA model yielded a lower accuracy score compared to all other classification models we tested up to now.
+
+
 ### 6.2.5 Naive Bayes
 
-We fit the Naive Bayes model using the significant variables.
+Naive Bayes is a probabilistic classification algorithm based on Bayes’ Theorem, which assumes independence between the features.
+
 
 ```{r naive_bayes, echo=TRUE, results='hide'}
 model_nb <- naiveBayes(Attrition ~ 
@@ -765,16 +770,15 @@ model_nb <- naiveBayes(Attrition ~
                        data = train.data)
 ```
 
+The Naive Bayes model achieved an accuracy score of 0.84, which is consistent with the performance of the other models we tested.
 
-Now that we have fitted the models to the training set we can evaluate the performance of each model on the test set and select the best model.
 
-\newpage
+# 7 Evaluation 
 
-# 7 Evaluation
 
-## 7.1 Regression Models
+## 7.1 Regression models
 
-We want to compare the initial regression model with the final model. So, we evaluate the regression models computing the Mean Squared Error (MSE) on the test set. Then we plot the residuals of the final model.
+Given that we found the final regression model to be the most accurate, we decided to compare the Mean Squared Error (MSE) on the test set between the initial and final model.
 
 ```{r regression_evaluation, echo=TRUE}
 base.pred <- predict(model_base, newdata = test.data)
@@ -785,6 +789,8 @@ final.mse <- mean((test.data$YearsAtCompany - final.pred)^2)
 print(paste("MSE of the final model on test set:", final.mse))
 ```
 
+Additionally, we showcase the Residuals of the final model.
+
 ```{r residuals, echo=TRUE, fig.width=10, fig.height=6}
 residuals <- test.data$YearsAtCompany - final.pred
 par(mfrow = c(1, 1))
@@ -792,12 +798,10 @@ plot(residuals, pch = 20, main = "Residuals of the final model")
 abline(h = 0, col = "red")
 ```
 
-The Mean Squared Error of the final model is lower than the initial model. The residuals of the final model are randomly distributed around zero, which is a good sign.
 
 ## 7.2 Classification Models
 
-We evaluate the classification models computing the performance metrics used at lesson. We can compare the performance of the models and then we plot the confusion matrix of the best model and the ROC curve.
-
+Given similar performances across all classification models, we compared the models based on their confusion matrices.
 
 ```{r classification_evaluation, echo=TRUE}
 perf.measure <- function(true.values, pred.values,  lab.pos = 1){
@@ -823,6 +827,8 @@ perf.measure <- function(true.values, pred.values,  lab.pos = 1){
 }
 ```
 
+\newpage 
+
 ### 7.2.1 Logistic Regression Models
 
 ```{r classification_evaluation_summary, echo=FALSE}
@@ -835,7 +841,7 @@ final.logit.pred[final.logit.prob>0.5] <- "Yes"
 ```
 
 
-We plot the confusion matrix of the initial logistic regression model.
+The confusion matrix of the initial logistic regression model.
 
 ```{r confusion_matrix_base, echo=TRUE, fig.width=10, fig.height=6}
 conf_matrix_base_logit <- table(base.logit.pred, test.data$Attrition)
@@ -847,7 +853,7 @@ conf_matrix_base_logit
 accuracy_base_logit <- round(sum(diag(conf_matrix_base_logit))/sum(conf_matrix_base_logit), 2) * 100
 print(paste("Accuracy of the initial logistic regression model:", accuracy_base_logit, "%"))
 ```
-We plot the confusion matrix of the final logistic regression model.
+The confusion matrix of the logistic regression model after feature selection.
 
 ```{r confusion_matrix_final, echo=TRUE, fig.width=10, fig.height=6}
 conf_matrix_final_logit <- table(final.logit.pred, test.data$Attrition)
@@ -860,10 +866,9 @@ print(paste("Accuracy of the final logistic regression model:", accuracy_final_l
 ```
 
 
-The final logistic regression model has a better performance than the initial model.
-
 ### 7.2.2 LDA 
 
+The confusion matrix of the LDA model.
 
 ```{r lda_classification_evaluation_summary}
 lda.prob <- predict(model_lda, newdata = test.data)
@@ -879,6 +884,8 @@ print(paste("Accuracy of the LDA model:", accuracy_lda, "%"))
 ```
 
 ### 7.2.3 QDA
+
+The confusion matrix of the QDA model.
 
 ```{r qda_classification_evaluation_summary}
 qda.prob <- predict(model_qda, newdata = test.data)
@@ -896,6 +903,8 @@ print(paste("Accuracy of the QDA model:", accuracy_qda, "%"))
 
 ### 7.2.4 Naive Bayes
 
+The confusion matrix of the Naive Bayes model.
+
 ```{r naive_bayes_classification_evaluation_summary}
 nb.prob <- predict(model_nb, newdata = test.data, type="raw")
 nb.pred <- predict(model_nb, newdata = test.data, type="class")
@@ -910,9 +919,11 @@ print(paste("Accuracy of the Naive Bayes model:", accuracy_nb, "%"))
 
 # 8 Conclusion
 
+To conclude our analysis, we provide an overview of the performance of the models we developed.  Specifically, we demonstrate the significant improvement of our final regression model compared to the initial one. Additionally, we deliver an in-depth analysis on the different classification models using a variety of different metrics. Given the imbalance in our dataset regarding the attrition variable, we conducted an additional analysis on the classification models using a balanced dataset, placing greater emphasis on the F1-Score.
+
+
 ## 8.1 Comparison of the Regression Models
 
-These are the results of the regression models:
 
 | Model        | MSE         | R-squared   |
 |---------------|-------------|-------------|
@@ -920,11 +931,12 @@ These are the results of the regression models:
 | Final Model  | 9.37    | 0.84   |
 
 
-The final model has a lower MSE and a higher R-squared value than the base model. Therefore, the final model is the better model and should be used for predicting the attrition rate of employees.
+The final model demonstrates a lower MSE and a higher R-squared value compared to the base model. Therefore, the final model is superior and should be used for predicting the attrition rate of employees. Furthermore, due to the residuals being distributed randomly around 0, the superior model's predictions are unbiased.
 
-## 8.2 Comparison of Classification Models
 
-We first plot the ROC curves of the models and compare the AUC values.
+## 8.2 Comparison of the Classification Models
+
+We showcase the ROC curves of all our classification models.
 
 ```{r roc_curves, echo=TRUE, fig.width=10, fig.height=4}
 roc.out_base <- roc(test.data$Attrition, base.logit.prob, levels=c("No", "Yes"))
@@ -952,7 +964,8 @@ auc_qda <- round(auc(roc.out_qda), 2)
 auc_nb <- round(auc(roc.out_nb), 2)
 ```
 
-These are the results of the classification models:
+
+We give a comparison of the classification models based on various evaluation metrics.
 
 ```{r classification_evaluation_comparison, echo=TRUE}
 base.logit.result <- perf.measure(test.data$Attrition, base.logit.pred, lab.pos = "Yes")
@@ -974,9 +987,22 @@ nb.result <- perf.measure(test.data$Attrition, nb.pred, lab.pos = "Yes")
 
 
 
-The logistic regression model with feature selection has the highest accuracy and the QDA model has the highest F1 score. In this case, since accuracy is the most important metric, the logistic regression model with feature selection is slightly better than the other models. The ROC curve shows that the logistic regression models have the highest AUC value. In conclusion, the logistic regression model with feature selection is the best model for predicting employee attrition.
 
-This are the results balancing classes:
+The logistic regression model using all features shows moderate accuracy and AUC. The PPV and TNR are high, but the TPR is very low, indicating that the model is not capturing many of the actual positive instances (employees who leave).
+The logistic regression model after feature selection shows slight improvement in accuracy, TPR, and F1 Score and a strong increase in the PPV score. The improvement in PPV suggests better precision, possibly due to the removal of irrelevant features.
+The LDA model has similar accuracy to logistic regression but lower TPR and F1 Score. This indicates that LDA is also capturing fewer actual positives.
+The QDA model shows the highest F1-Score and TPR, suggesting it is better at identifying employees who will leave. However, this comes at the cost of lower TNR and higher FPR, indicating more false positives. The lower accuracy and AUC reflect this trade-off.
+The Naive Bayes model shows the lowest AUC score across all classification models.
+
+We conclude that the logistic regression model with feature selection provides us with the strongest model in terms of accuracy and AUC score.
+The QDA model has the highest F1 and TPR score, which makes it useful if the primary goal is to identify as many employees who leave as possible.
+
+
+## 8.3  Comparison of the Classification Models with Balanced Data
+
+The low TPR score across most models indicates that they are not effectively identifying employees who leave. This is due to the heavy imbalance in our dataset, where only 16% of employees have an attrition value of 'yes'. To address this issue, we balanced the dataset by removing samples randomly from the majority class, resulting in a dataset where the number of employees staying is about twice the number of those leaving.
+
+
 
 | Model               | Accuracy | PPV   | TPR   | F1 Score | TNR   | FPR   | AUC   |
 |-----------------------|----------|-------|-------|----------|-------|-------|-------|
@@ -986,6 +1012,38 @@ This are the results balancing classes:
 | LDA                                     | 0.82     | 0.41  | 0.41  | 0.41     | 0.89  | 0.10  | 0.76  |
 | QDA                                     | 0.78     | 0.34  | 0.51  | 0.41     | 0.81  | 0.18  | 0.72  |
 | Naive Bayes                             | 0.76     | 0.34  | 0.47  | 0.40     | 0.83  | 0.16  | 0.73  |
+
+
+Here we find LDA to be the best model overall, outperforming the other models in nearly every metric. Thus, we propose to use it in cases where the dataset is more balanced with respect to the response variable of the classification model.
+
+
+## 8.4 Feature Importance
+
+In both models, we employed feature selection to identify the most important features. We will now analyze which variables had the greatest impact on the regression and classification models, and specifically how they influenced the outcomes.
+
+### 8.4.1 Regression Models
+
+We found that `YearsWithCurrManager` has the highest positive influence on `YearsAtCompany`. The longer an employee spends with their current manager, the more likely they are to stay at the company. Additionally, higher education levels and job satisfaction positively impact the number of years an employee spends at the company. Smaller positive influences include `TotalWorkingYears`, indicating that experience contributes positively to tenure, and `Age`, suggesting that older employees tend to stay longer. Conversely, `NumCompaniesWorked` has the strongest negative impact on `YearsAtCompany`, indicating that employees who have worked at more companies are more likely to leave, as they frequently change workplaces. Furthermore, `YearsSinceLastPromotion` negatively affects `YearsAtCompany`, suggesting that employees who have not been promoted in a long time are more likely to leave, possibly due to perceived lack of future opportunities at the company.
+
+### 8.4.2 Classification Models
+
+We found that both frequent and infrequent business travel have a significant positive influence on attrition. This indicates that employees who travel either frequently or rarely are more likely to leave the company compared to those who travel occasionally. Frequent travelers may experience stress from constant travel, while those who rarely travel may feel left out from company activities. Furthermore, we found that both single and married employees are likely to leave the company, although married employees are less likely to do so compared to single ones. We additionally find that `YearsSinceLastPromotion` and `NumCompaniesWorked` have small positive influence on attrition, indicating that employees who have not been promoted in a long time or have worked in many different companies are more likely to leave. As for the negative influences, we found that having a good `WorkLifeBalance` and higher `JobSatisfaction` are associated with no attrition. Lastly, employees working in Departments such as Research & Development and Sales are less likely to leave the company.
+
+
+### 8.4.3 Comparison 
+
+When comparing the significant features in both the regression and classification models, the impact of `YearsSinceLastPromotion`, `YearsWithCurrentManager`, `JobSatisfaction` and `TotalWorkingYears` have a positive influence on `YearsAtCompany` and negative influence on `Attrition`. This means that these are important factors when it comes to having employees work for a long time at a company without leaving. Nevertheless, we observe that the features with strong impact on one model do not necessarily appear among the features in the other model. This can be seen in `WorkLifeBalance`, `BusinessTravel` or `MaritalStatus` only appearing in the selected features of the classification models for `Attrition`, while `Education` was only relevant for `YearsAtCompany`. Thus, even though our two variables of interest share many significant features, they still need to be analyzed separately because each model has a number of unique features.
+
+
+
+
+
+
+
+
+
+
+
 
 
 
