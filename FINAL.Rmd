@@ -775,6 +775,8 @@ The Naive Bayes model achieved an accuracy score of 0.84, which is consistent wi
 
 # 7 Evaluation 
 
+For the evaluation, we provide an overview of the performance of the models we developed.  Specifically, we demonstrate the significant improvement of our final regression model compared to the initial one. Additionally, we deliver an in-depth analysis on the different classification models using a variety of different metrics. Given the imbalance in our dataset regarding the attrition variable, we conducted an additional analysis on the classification models using a balanced dataset, placing greater emphasis on the F1-Score. Finally, we highlight the most influential features for each model and provide our interpretation of their contextual meaning.
+
 
 ## 7.1 Regression models
 
@@ -799,7 +801,17 @@ abline(h = 0, col = "red")
 ```
 
 
+| Model        | MSE         | R-squared   |
+|---------------|-------------|-------------|
+| Base Model   | 16.20   | 0.59   |
+| Final Model  | 9.37    | 0.84   |
+
+
+The final model demonstrates a lower MSE and a higher R-squared value compared to the base model. Furthermore, due to the residuals being distributed randomly around 0, the superior model's predictions are unbiased.
+
 ## 7.2 Classification Models
+
+### 7.2.1 Confusion matrices
 
 Given similar performances across all classification models, we compared the models based on their confusion matrices.
 
@@ -827,9 +839,7 @@ perf.measure <- function(true.values, pred.values,  lab.pos = 1){
 }
 ```
 
-\newpage 
 
-### 7.2.1 Logistic Regression Models
 
 ```{r classification_evaluation_summary, echo=FALSE}
 base.logit.prob <- predict(initial_model_logit, newdata = test.data, type = "response")
@@ -866,8 +876,6 @@ print(paste("Accuracy of the final logistic regression model:", accuracy_final_l
 ```
 
 
-### 7.2.2 LDA 
-
 The confusion matrix of the LDA model.
 
 ```{r lda_classification_evaluation_summary}
@@ -883,7 +891,6 @@ accuracy_lda <- round(sum(diag(conf_matrix_lda))/sum(conf_matrix_lda), 2) * 100
 print(paste("Accuracy of the LDA model:", accuracy_lda, "%"))
 ```
 
-### 7.2.3 QDA
 
 The confusion matrix of the QDA model.
 
@@ -901,8 +908,6 @@ print(paste("Accuracy of the QDA model:", accuracy_qda, "%"))
 ```
 
 
-### 7.2.4 Naive Bayes
-
 The confusion matrix of the Naive Bayes model.
 
 ```{r naive_bayes_classification_evaluation_summary}
@@ -917,26 +922,10 @@ accuracy_nb <- round(sum(diag(conf_matrix_nb))/sum(conf_matrix_nb), 2) * 100
 print(paste("Accuracy of the Naive Bayes model:", accuracy_nb, "%"))
 ```
 
-# 8 Conclusion
 
-To conclude our analysis, we provide an overview of the performance of the models we developed.  Specifically, we demonstrate the significant improvement of our final regression model compared to the initial one. Additionally, we deliver an in-depth analysis on the different classification models using a variety of different metrics. Given the imbalance in our dataset regarding the attrition variable, we conducted an additional analysis on the classification models using a balanced dataset, placing greater emphasis on the F1-Score.
+### 7.2.2 ROC curves
 
-
-## 8.1 Comparison of the Regression Models
-
-
-| Model        | MSE         | R-squared   |
-|---------------|-------------|-------------|
-| Base Model   | 16.20   | 0.59   |
-| Final Model  | 9.37    | 0.84   |
-
-
-The final model demonstrates a lower MSE and a higher R-squared value compared to the base model. Therefore, the final model is superior and should be used for predicting the attrition rate of employees. Furthermore, due to the residuals being distributed randomly around 0, the superior model's predictions are unbiased.
-
-
-## 8.2 Comparison of the Classification Models
-
-We showcase the ROC curves of all our classification models.
+Next, we plotted ROC curves for comparison.
 
 ```{r roc_curves, echo=TRUE, fig.width=10, fig.height=4}
 roc.out_base <- roc(test.data$Attrition, base.logit.prob, levels=c("No", "Yes"))
@@ -965,15 +954,8 @@ auc_nb <- round(auc(roc.out_nb), 2)
 ```
 
 
-We give a comparison of the classification models based on various evaluation metrics.
-
-```{r classification_evaluation_comparison, echo=TRUE}
-base.logit.result <- perf.measure(test.data$Attrition, base.logit.pred, lab.pos = "Yes")
-final.logit.result <- perf.measure(test.data$Attrition, final.logit.pred, lab.pos = "Yes")
-lda.result <- perf.measure(test.data$Attrition, lda.pred, lab.pos = "Yes")
-qda.result <- perf.measure(test.data$Attrition, qda.pred, lab.pos = "Yes")
-nb.result <- perf.measure(test.data$Attrition, nb.pred, lab.pos = "Yes")
-```
+### 7.2.3 Evaluation Summary
+And using the obtained results, we compared the classification models based on various evaluation metrics.
 
 
 | Model               | Accuracy | PPV   | TPR   | F1 Score | TNR   | FPR   | AUC   |
@@ -986,8 +968,6 @@ nb.result <- perf.measure(test.data$Attrition, nb.pred, lab.pos = "Yes")
 | Naive Bayes                             | 0.84     | 0.44  | 0.20  | 0.27     | 0.95  | 0.05  | 0.72  |
 
 
-
-
 The logistic regression model using all features shows moderate accuracy and AUC. The PPV and TNR are high, but the TPR is very low, indicating that the model is not capturing many of the actual positive instances (employees who leave).
 The logistic regression model after feature selection shows slight improvement in accuracy, TPR, and F1 Score and a strong increase in the PPV score. The improvement in PPV suggests better precision, possibly due to the removal of irrelevant features.
 The LDA model has similar accuracy to logistic regression but lower TPR and F1 Score. This indicates that LDA is also capturing fewer actual positives.
@@ -998,7 +978,7 @@ We conclude that the logistic regression model with feature selection provides u
 The QDA model has the highest F1 and TPR score, which makes it useful if the primary goal is to identify as many employees who leave as possible.
 
 
-## 8.3  Comparison of the Classification Models with Balanced Data
+### 7.2.4  Comparison of the Classification Models with Balanced Data
 
 The low TPR score across most models indicates that they are not effectively identifying employees who leave. This is due to the heavy imbalance in our dataset, where only 16% of employees have an attrition value of 'yes'. To address this issue, we balanced the dataset by removing samples randomly from the majority class, resulting in a dataset where the number of employees staying is about twice the number of those leaving.
 
@@ -1017,31 +997,22 @@ The low TPR score across most models indicates that they are not effectively ide
 Here we find LDA to be the best model overall, outperforming the other models in nearly every metric. Thus, we propose to use it in cases where the dataset is more balanced with respect to the response variable of the classification model.
 
 
-## 8.4 Feature Importance
+## 7.3 Feature Importance
 
 In both models, we employed feature selection to identify the most important features. We will now analyze which variables had the greatest impact on the regression and classification models, and specifically how they influenced the outcomes.
 
-### 8.4.1 Regression Models
+### 7.3.1 Regression Models
 
 We found that `YearsWithCurrManager` has the highest positive influence on `YearsAtCompany`. The longer an employee spends with their current manager, the more likely they are to stay at the company. Additionally, higher education levels and job satisfaction positively impact the number of years an employee spends at the company. Smaller positive influences include `TotalWorkingYears`, indicating that experience contributes positively to tenure, and `Age`, suggesting that older employees tend to stay longer. Conversely, `NumCompaniesWorked` has the strongest negative impact on `YearsAtCompany`, indicating that employees who have worked at more companies are more likely to leave, as they frequently change workplaces. Furthermore, `YearsSinceLastPromotion` negatively affects `YearsAtCompany`, suggesting that employees who have not been promoted in a long time are more likely to leave, possibly due to perceived lack of future opportunities at the company.
 
-### 8.4.2 Classification Models
+### 7.3.2 Classification Models
 
 We found that both frequent and infrequent business travel have a significant positive influence on attrition. This indicates that employees who travel either frequently or rarely are more likely to leave the company compared to those who travel occasionally. Frequent travelers may experience stress from constant travel, while those who rarely travel may feel left out from company activities. Furthermore, we found that both single and married employees are likely to leave the company, although married employees are less likely to do so compared to single ones. We additionally find that `YearsSinceLastPromotion` and `NumCompaniesWorked` have small positive influence on attrition, indicating that employees who have not been promoted in a long time or have worked in many different companies are more likely to leave. As for the negative influences, we found that having a good `WorkLifeBalance` and higher `JobSatisfaction` are associated with no attrition. Lastly, employees working in Departments such as Research & Development and Sales are less likely to leave the company.
 
 
-### 8.4.3 Comparison 
+### 7.3.3 Comparison 
 
 When comparing the significant features in both the regression and classification models, the impact of `YearsSinceLastPromotion`, `YearsWithCurrentManager`, `JobSatisfaction` and `TotalWorkingYears` have a positive influence on `YearsAtCompany` and negative influence on `Attrition`. This means that these are important factors when it comes to having employees work for a long time at a company without leaving. Nevertheless, we observe that the features with strong impact on one model do not necessarily appear among the features in the other model. This can be seen in `WorkLifeBalance`, `BusinessTravel` or `MaritalStatus` only appearing in the selected features of the classification models for `Attrition`, while `Education` was only relevant for `YearsAtCompany`. Thus, even though our two variables of interest share many significant features, they still need to be analyzed separately because each model has a number of unique features.
-
-
-
-
-
-
-
-
-
 
 
 
