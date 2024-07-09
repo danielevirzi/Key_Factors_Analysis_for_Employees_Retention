@@ -955,7 +955,7 @@ auc_nb <- round(auc(roc.out_nb), 2)
 
 
 ### 7.2.3 Evaluation Summary
-And using the obtained results, we compared the classification models based on various evaluation metrics.
+Using the obtained results, we compared the classification models based on various evaluation metrics.
 
 
 | Model               | Accuracy | PPV   | TPR   | F1 Score | TNR   | FPR   | AUC   |
