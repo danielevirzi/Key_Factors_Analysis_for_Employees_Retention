@@ -722,7 +722,7 @@ par(mfrow = c(2, 1), mar = c(4, 4, 2, 2))
 plot(model_lda, type="both", col = c(4))
 ```
 
-We can see that the 2 graphs are not well separated and have significant overlap, which suggests thatt the discriminative power of the LDA model is limited.
+We can see that the 2 graphs are not well separated and have significant overlap, which suggests that the discriminative power of the LDA model is limited.
 
 Achieving an accuracy score of 0.84, the LDA model performed similarly to the logistic regression model.
 
