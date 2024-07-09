@@ -194,7 +194,7 @@ data$WorkLifeBalance <- factor(data$WorkLifeBalance)
 
 ## 4.2 Log transformation
 
-We found `MonthlyIncome` to be right-skewed, thus we applied a log transformation to normalize its distribution.
+We observed that MonthlyIncome is right-skewed and spans a wide range, including both very low and very high values. To normalize its distribution, we applied a log transformation.
 
 ```{r log_transformation, echo=TRUE}
 data$MonthlyIncome <- log(data$MonthlyIncome)
@@ -716,16 +716,19 @@ model_lda <- lda(Attrition ~
                  data = train.data)
 ```
 
+
 ```{r lda_summary, echo=TRUE, fig.width=10, fig.height=8}
 par(mfrow = c(2, 1), mar = c(4, 4, 2, 2))
 plot(model_lda, type="both", col = c(4))
 ```
 
+We can see that the 2 graphs are not well separated and have significant overlap, which suggests thatt the discriminative power of the LDA model is limited.
+
 Achieving an accuracy score of 0.84, the LDA model performed similarly to the logistic regression model.
 
 ### 6.2.4 QDA (Quadratic Discriminant Analysis)
 
-QDA is a more flexible model than LDA, as it does not assume that the covariance of the predictors is the same in each class. Thus, we tried QDA to see if we can achieve a performance improvement.
+QDA is a more flexible model than LDA, as it does not assume that the covariance of the predictors is the same in each class. It additionally is able to fit quadratic boundaries, leading to potentially better performance for complex datasets.
 
 ```{r qda, echo=TRUE, results='hide'}
 model_qda <- qda(Attrition ~ 
@@ -751,7 +754,7 @@ In our analysis, the QDA model yielded a lower accuracy score compared to all ot
 
 ### 6.2.5 Naive Bayes
 
-Naive Bayes is a probabilistic classification algorithm based on Bayes’ Theorem, which assumes independence between the features.
+Naive Bayes is a probabilistic classification algorithm that relies on Bayes’ Theorem and assumes independence between features. Its main strengths are simplicity, efficiency, and scalability, making it effective for high-dimensional datasets. However, it struggles with highly correlated features and small datasets.
 
 
 ```{r naive_bayes, echo=TRUE, results='hide'}
