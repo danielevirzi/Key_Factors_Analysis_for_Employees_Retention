@@ -3,7 +3,7 @@ Academic group project for the *Statistical Learning Course* of the MSc in Data 
 
 
 ## Description
-This project is a collaborative effort between three students, **Marlon Helbing**, **Nemanja Ilic**, **Daniele Virzì**, . It is an academic project that will be graded based on the quality and depth of our analysis.
+This project is a collaborative effort between three students, **Marlon Helbing**, **Nemanja Ilic**, **Daniele Virzì**. It is an academic project that will be graded based on the quality and depth of our analysis.
 
 
 ## Tools
